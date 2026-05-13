@@ -15,6 +15,28 @@
   z-index: 100;
 }
 
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.logo-img {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--primary-color);
+  padding: 3px; /* الفراغ بين الصورة والإطار */
+  background-color: #ffffff; /* لون الفراغ أبيض */
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
+  transition: transform 0.3s ease;
+}
+
+.logo-img:hover {
+  transform: scale(1.1);
+}
+
 .logo {
   font-size: 1.5rem;
   font-weight: 700;

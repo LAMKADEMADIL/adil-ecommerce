@@ -5,7 +5,8 @@ function App() {
     <div className="app-wrapper">
       {/* منطقة الرأس - Header */}
       <header className="header">
-        <div className="container">
+        <div className="container header-content">
+          <img src="/image.png" alt="Adil Logo" className="logo-img" />
           <h1 className="logo">Adil E-commerce</h1>
         </div>
       </header>
