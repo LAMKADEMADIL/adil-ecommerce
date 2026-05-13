@@ -18,7 +18,7 @@
 .header-content {
   display: flex;
   align-items: center;
-  gap: 15px;
+  justify-content: space-between;
 }
 
 .logo-img {
@@ -329,6 +329,67 @@
   padding-top: 20px;
   border-top: 1px solid #334155;
   font-size: 0.9rem;
+}
+
+/* =========================================================
+   محول اللغات (Language Switcher) و دعم اللغة العربية (RTL)
+   ========================================================= */
+
+.lang-switcher {
+  display: flex;
+  gap: 8px;
+}
+
+.lang-select {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background-color: #f8fafc;
+  color: var(--text-main);
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.lang-select:hover {
+  border-color: var(--primary-color);
+  background-color: #ffffff;
+}
+
+.lang-select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* دعم اتجاه اليمين لليسار (اللغة العربية) */
+.rtl-layout {
+  direction: rtl;
+  text-align: right;
+  font-family: 'Tajawal', 'Cairo', sans-serif; /* خطوط عربية جميلة */
+}
+
+.rtl-layout .footer-links a:hover {
+  padding-left: 0;
+  padding-right: 5px; /* الانزياح لليسار بدل اليمين */
+}
+
+.rtl-layout .close-modal {
+  right: auto;
+  left: 20px; /* نقل زر إغلاق النافذة المنبثقة لليسار */
+}
+
+.rtl-layout .floating-whatsapp {
+  right: auto;
+  left: 30px; /* نقل زر الواتساب العائم لليسار كي لا يغطي محتوى اليمين */
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 /* =========================================================

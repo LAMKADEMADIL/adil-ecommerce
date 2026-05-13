@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Bike, Briefcase, Banknote, MessageCircle } from 'lucide-react';
+import { translations } from './translations';
+import type { Language } from './translations';
 import './App.css';
 
 // بيانات مؤقتة لتجربة التصميم (Mock Data)
@@ -39,9 +41,12 @@ const MOCK_PRODUCTS = [
 ];
 
 function App() {
-  // حالة (State) للتحكم في النافذة المنبثقة ومعرفة المنتج الذي تم اختياره
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [activeCategory, setActiveCategory] = useState('Tous');
+  const [lang, setLang] = useState<Language>('fr');
+
+  const t = translations[lang];
+  const isRTL = lang === 'ar';
 
   // تصفية المنتجات حسب التصنيف
   const filteredProducts = activeCategory === 'Tous' 
@@ -49,12 +54,27 @@ function App() {
     : MOCK_PRODUCTS.filter(p => p.category === activeCategory);
 
   return (
-    <div className="app-wrapper">
+    <div className={`app-wrapper ${isRTL ? 'rtl-layout' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
       {/* منطقة الرأس - Header */}
       <header className="header">
         <div className="container header-content">
-          <img src="/image.png" alt="Adil Logo" className="logo-img" />
-          <h1 className="logo">Adil E-commerce</h1>
+          <div className="logo-section">
+            <img src="/image.png" alt="Adil Logo" className="logo-img" />
+            <h1 className="logo">Adil E-commerce</h1>
+          </div>
+          
+          {/* محول اللغات (Select Dropdown) */}
+          <div className="lang-switcher">
+            <select 
+              value={lang} 
+              onChange={(e) => setLang(e.target.value as Language)}
+              className="lang-select"
+            >
+              <option value="fr">Français (FR)</option>
+              <option value="ar">العربية (AR)</option>
+              <option value="en">English (EN)</option>
+            </select>
+          </div>
         </div>
       </header>
 
@@ -63,32 +83,32 @@ function App() {
         
         {/* قسم الترحيب - Hero Section */}
         <section className="hero">
-          <h2>Découvrez nos portefeuilles et sacs faits main</h2>
-          <p>Qualité exceptionnelle, design moderne.</p>
+          <h2>{t.heroTitle}</h2>
+          <p>{t.heroDesc}</p>
         </section>
         
         {/* شريط المميزات والثقة */}
         <section className="trust-badges">
           <div className="badge-item">
             <span className="badge-icon"><Bike size={40} strokeWidth={1.5} color="var(--primary-color)" /></span>
-            <h4>Livraison Rapide</h4>
-            <p>À Casablanca</p>
+            <h4>{t.delivery}</h4>
+            <p>{t.deliveryDesc}</p>
           </div>
           <div className="badge-item">
             <span className="badge-icon"><Briefcase size={40} strokeWidth={1.5} color="var(--primary-color)" /></span>
-            <h4>Cuir 100% Authentique</h4>
-            <p>Qualité garantie</p>
+            <h4>{t.leather}</h4>
+            <p>{t.leatherDesc}</p>
           </div>
           <div className="badge-item">
             <span className="badge-icon"><Banknote size={40} strokeWidth={1.5} color="var(--primary-color)" /></span>
-            <h4>Paiement à la livraison</h4>
-            <p>Achetez en toute sécurité</p>
+            <h4>{t.cod}</h4>
+            <p>{t.codDesc}</p>
           </div>
         </section>
         
         {/* معرض المنتجات */}
         <section className="products-section">
-          <h3 className="section-title">Notre Collection de Sacs & Portefeuilles</h3>
+          <h3 className="section-title">{t.collection}</h3>
           
           {/* أزرار التصفية (Category Filters) */}
           <div className="category-filters">
@@ -98,7 +118,7 @@ function App() {
                 className={`filter-btn ${activeCategory === cat ? 'active' : ''}`}
                 onClick={() => setActiveCategory(cat)}
               >
-                {cat}
+                {t.cats[cat as keyof typeof t.cats]}
               </button>
             ))}
           </div>
@@ -108,7 +128,7 @@ function App() {
               <div key={product.id} className="product-card">
                 <div className="product-image-container">
                   <img src={product.image} alt={product.name} className="product-image" />
-                  {!product.inStock && <span className="badge out-of-stock">Rupture</span>}
+                  {!product.inStock && <span className="badge out-of-stock">{t.rupture}</span>}
                 </div>
                 <div className="product-info">
                   <h4 className="product-name">{product.name}</h4>
@@ -118,7 +138,7 @@ function App() {
                     disabled={!product.inStock}
                     onClick={() => setSelectedProduct(product)}
                   >
-                    {product.inStock ? 'Commander' : 'Indisponible'}
+                    {product.inStock ? t.commander : t.indisponible}
                   </button>
                 </div>
               </div>
@@ -146,29 +166,29 @@ function App() {
                 {/* استمارة الطلب السريع */}
                 <form className="order-form" onSubmit={(e) => { 
                   e.preventDefault(); 
-                  alert("🎉 Commande reçue avec succès ! Nous vous contacterons bientôt."); 
+                  alert(t.successMsg); 
                   setSelectedProduct(null); 
                 }}>
-                  <h3>Commander (Paiement à la livraison)</h3>
+                  <h3>{t.formTitle}</h3>
                   <div className="form-group">
-                    <input type="text" placeholder="Nom complet" required />
+                    <input type="text" placeholder={t.formName} required />
                   </div>
                   <div className="form-group">
-                    <input type="tel" placeholder="Téléphone" required />
+                    <input type="tel" placeholder={t.formPhone} required />
                   </div>
                   <div className="form-group">
-                    <input type="text" placeholder="Ville / Adresse" required />
+                    <input type="text" placeholder={t.formCity} required />
                   </div>
-                  <button type="submit" className="btn-submit-order">Confirmer l'achat</button>
+                  <button type="submit" className="btn-submit-order">{t.formSubmit}</button>
                 </form>
                 
                 {/* زر الواتساب */}
                 <button 
                   className="btn-whatsapp" 
-                  onClick={() => window.open(`https://wa.me/212600000000?text=Bonjour, je souhaite commander : ${selectedProduct.name}`, '_blank')}
+                  onClick={() => window.open(`https://wa.me/212600000000?text=${isRTL ? 'مرحباً، أريد طلب:' : 'Bonjour, je souhaite commander :'} ${selectedProduct.name}`, '_blank')}
                   style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'}}
                 >
-                  <MessageCircle size={20} /> Commander via WhatsApp
+                  <MessageCircle size={20} /> {t.whatsappBtn}
                 </button>
               </div>
             </div>
@@ -186,18 +206,18 @@ function App() {
         <div className="container footer-content-grid">
           <div className="footer-brand">
             <h2 className="logo" style={{color: 'white', marginBottom: '15px'}}>Adil E-commerce</h2>
-            <p>Artisanat marocain, cuirs de première qualité et designs modernes pour votre quotidien.</p>
+            <p>{t.heroDesc}</p>
           </div>
           <div className="footer-links">
-            <h3>Liens Rapides</h3>
+            <h3>{t.footerLinks}</h3>
             <ul>
-              <li><a href="#">Boutique</a></li>
-              <li><a href="#">À propos de nous</a></li>
-              <li><a href="#">Politique de retour</a></li>
+              <li><a href="#">{t.cats['Tous']}</a></li>
+              <li><a href="#">{t.footerAbout}</a></li>
+              <li><a href="#">{t.footerPolicy}</a></li>
             </ul>
           </div>
           <div className="footer-contact">
-            <h3>Contactez-nous</h3>
+            <h3>{t.footerContact}</h3>
             <p>📞 +212 60 00 00 00</p>
             <p>📧 contact@adil-ecommerce.com</p>
           </div>
