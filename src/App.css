@@ -78,8 +78,15 @@
 
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 30px;
+}
+
+/* لضمان ظهور 3 منتجات في الصف الواحد على الشاشات الكبيرة */
+@media (min-width: 992px) {
+  .products-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 .product-card {
@@ -185,4 +192,173 @@
   text-align: center;
   color: var(--text-muted);
   font-size: 0.9rem;
+}
+
+/* =========================================================
+   تصميم النافذة المنبثقة (Modal Pop-up)
+   ========================================================= */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-content {
+  background-color: #ffffff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.close-modal {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  font-size: 2rem;
+  color: #64748b;
+  background: none;
+  border: none;
+  cursor: pointer;
+  z-index: 10;
+  transition: color 0.2s;
+}
+
+.close-modal:hover {
+  color: #ef4444;
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 768px) {
+  .modal-body {
+    flex-direction: row;
+  }
+}
+
+.modal-image-wrapper {
+  flex: 1;
+  background-color: #f8fafc;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  min-height: 300px;
+}
+
+/* هنا السر: استخدمنا contain لكي تظهر الصورة كاملة وغير مقصوصة */
+.modal-image-wrapper img {
+  max-width: 100%;
+  max-height: 500px;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.modal-details {
+  flex: 1;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-details h2 {
+  font-size: 1.8rem;
+  color: var(--text-main);
+  margin-bottom: 10px;
+}
+
+.modal-price {
+  font-size: 1.5rem;
+  color: var(--primary-color);
+  font-weight: 800;
+}
+
+.modal-divider {
+  height: 1px;
+  background-color: #e2e8f0;
+  margin: 20px 0;
+}
+
+/* تصميم استمارة الطلب */
+.order-form h3 {
+  font-size: 1.1rem;
+  margin-bottom: 15px;
+  color: #334155;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: border-color 0.3s;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.btn-submit-order {
+  width: 100%;
+  padding: 14px;
+  background-color: #10b981; /* أخضر جميل للدفع */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-bottom: 15px;
+  transition: background-color 0.3s, transform 0.1s;
+}
+
+.btn-submit-order:hover {
+  background-color: #059669;
+}
+
+.btn-whatsapp {
+  width: 100%;
+  padding: 14px;
+  background-color: #25D366; /* لون الواتساب الأصلي */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.btn-whatsapp:hover {
+  background-color: #1ea952;
 }

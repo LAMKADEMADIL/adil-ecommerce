@@ -1,12 +1,13 @@
-import './App.css'
+import { useState } from 'react';
+import './App.css';
 
 // بيانات مؤقتة لتجربة التصميم (Mock Data)
 const MOCK_PRODUCTS = [
   {
     id: 1,
-    name: "Portefeuille Classique Cuir",
-    price: "150 DH",
-    image: "https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&q=80&w=400",
+    name: "Pack Voyage & Sac à Dos Cuir",
+    price: "450 DH",
+    image: "/bag1.jpg",
     inStock: true
   },
   {
@@ -33,6 +34,9 @@ const MOCK_PRODUCTS = [
 ];
 
 function App() {
+  // حالة (State) للتحكم في النافذة المنبثقة ومعرفة المنتج الذي تم اختياره
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+
   return (
     <div className="app-wrapper">
       {/* منطقة الرأس - Header */}
@@ -54,7 +58,7 @@ function App() {
         
         {/* معرض المنتجات */}
         <section className="products-section">
-          <h3 className="section-title">Nos Collections Spéciales</h3>
+          <h3 className="section-title">Notre Collection de Sacs & Portefeuilles</h3>
           <div className="products-grid">
             {MOCK_PRODUCTS.map((product) => (
               <div key={product.id} className="product-card">
@@ -68,6 +72,7 @@ function App() {
                   <button 
                     className={`btn-order ${!product.inStock ? 'disabled' : ''}`}
                     disabled={!product.inStock}
+                    onClick={() => setSelectedProduct(product)}
                   >
                     {product.inStock ? 'Commander' : 'Indisponible'}
                   </button>
@@ -78,6 +83,53 @@ function App() {
         </section>
 
       </main>
+
+      {/* نافذة تفاصيل المنتج والطلب (Modal Pop-up) */}
+      {selectedProduct && (
+        <div className="modal-overlay" onClick={() => setSelectedProduct(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="close-modal" onClick={() => setSelectedProduct(null)}>&times;</button>
+            <div className="modal-body">
+              <div className="modal-image-wrapper">
+                {/* هنا الصورة تأخذ راحتها بالكامل دون أي قص */}
+                <img src={selectedProduct.image} alt={selectedProduct.name} />
+              </div>
+              <div className="modal-details">
+                <h2>{selectedProduct.name}</h2>
+                <p className="modal-price">{selectedProduct.price}</p>
+                <div className="modal-divider"></div>
+                
+                {/* استمارة الطلب السريع */}
+                <form className="order-form" onSubmit={(e) => { 
+                  e.preventDefault(); 
+                  alert("🎉 Commande reçue avec succès ! Nous vous contacterons bientôt."); 
+                  setSelectedProduct(null); 
+                }}>
+                  <h3>Commander (Paiement à la livraison)</h3>
+                  <div className="form-group">
+                    <input type="text" placeholder="Nom complet" required />
+                  </div>
+                  <div className="form-group">
+                    <input type="tel" placeholder="Téléphone" required />
+                  </div>
+                  <div className="form-group">
+                    <input type="text" placeholder="Ville / Adresse" required />
+                  </div>
+                  <button type="submit" className="btn-submit-order">Confirmer l'achat</button>
+                </form>
+                
+                {/* زر الواتساب */}
+                <button 
+                  className="btn-whatsapp" 
+                  onClick={() => window.open(`https://wa.me/212600000000?text=Bonjour, je souhaite commander : ${selectedProduct.name}`, '_blank')}
+                >
+                  Commander via WhatsApp
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* منطقة التذييل - Footer */}
       <footer className="footer">
