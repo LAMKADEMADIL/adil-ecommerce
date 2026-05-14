@@ -180,6 +180,7 @@
   display: flex;
   align-items: center;
   gap: 20px;
+  margin-inline-start: auto; /* يدفع هذا العنصر إلى أقصى الجهة الأخرى (اليمين في LTR) */
 }
 
 .lang-select-admin {

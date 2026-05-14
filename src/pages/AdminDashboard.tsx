@@ -76,27 +76,27 @@ export default function AdminDashboard() {
       {/* Main Content */}
       <main className="admin-main">
         <header className="admin-header">
-          <button className="menu-btn" onClick={toggleSidebar}>
-            <Menu size={24} />
-          </button>
-          
-          {/* محول اللغات */}
-          <div className="admin-actions">
-            <select 
-              value={lang} 
-              onChange={(e) => setLang(e.target.value as Language)}
-              className="lang-select-admin"
-            >
-              <option value="ar">AR</option>
-              <option value="fr">FR</option>
-              <option value="en">EN</option>
-            </select>
+          <div className="header-start" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <button className="menu-btn" onClick={toggleSidebar}>
+              <Menu size={24} />
+            </button>
             
             <div className="admin-profile">
               <span>{isRTL ? 'مرحباً، عادل' : 'Bonjour, Adil'}</span>
               <div className="avatar">A</div>
             </div>
           </div>
+          
+          {/* محول اللغات في الجهة الأخرى */}
+          <select 
+            value={lang} 
+            onChange={(e) => setLang(e.target.value as Language)}
+            className="lang-select-admin"
+          >
+            <option value="ar">AR</option>
+            <option value="fr">FR</option>
+            <option value="en">EN</option>
+          </select>
         </header>
 
         <div className="admin-content">
