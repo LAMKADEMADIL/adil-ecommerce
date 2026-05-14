@@ -16,21 +16,28 @@ Une plateforme e-commerce moderne (SPA) dédiée à la vente de portefeuilles et
 
 ## Roadmap de Développement (Plan)
 
-### 📍 Étape 1 : Design et Interfaces (UI/UX) - [En cours]
+### 📍 Étape 1 : Design et Interfaces (UI/UX) - [Terminé]
 - [x] Structure globale (Sidebar & Header)
 - [x] Page **Produits** (Tableau & Modal)
 - [x] Page **Commandes** (Tableau & Filtres)
-- [ ] Page **Clients** (Liste des clients)
-- [ ] Page **Paramètres** (Configuration)
+- [x] Page **Clients** (Liste des clients)
+- [x] Page **Paramètres** (Configuration)
 
-### 📍 Étape 2 : Sécurité et Authentification (Auth)
-- [ ] Page de connexion Admin (Login)
-- [ ] Protection des routes Admin
+### 📍 Étape 2 : Sécurité et Authentification (Auth) - [Terminé]
+- [x] Page de connexion Admin (Login)
+- [ ] Protection des routes Admin (À faire avec Firebase)
 
-### 📍 Étape 3 : Base de données (Firebase)
+### 📍 Étape 3 : Base de données (Firebase) - [En cours]
 - [ ] Remplacer les données fictives par des données réelles (Firestore)
 - [ ] Upload d'images réelles (Firebase Storage)
 
 ### 📍 Étape 4 : Intégration Complète
 - [ ] Liaison entre le Storefront et le Dashboard
 
+## Guide de Connexion Firebase
+
+1. **Créer un projet** sur la console Firebase.
+2. **Ajouter une application Web** `</>` pour obtenir les clés de configuration.
+3. **Installer Firebase SDK** via terminal : `npm install firebase`.
+4. **Créer un fichier** `src/firebase.ts` et y coller la configuration.
+5. **Initialiser les services** (Firestore et Storage).
