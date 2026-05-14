@@ -37,6 +37,7 @@ export default function AdminDashboard() {
   const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
   const toggleCollapse = () => setIsCollapsed(!isCollapsed);
 
+  
   const markAsDelivered = (id: string) => {
     setOrders(orders.map(order => order.id === id ? { ...order, status: 'delivered' } : order));
   };
