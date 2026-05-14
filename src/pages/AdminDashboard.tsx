@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Package, ShoppingBag, Users, Settings, LogOut, LayoutDashboard, Menu, X, ChevronRight, ChevronLeft, Plus, Edit, Trash2 } from 'lucide-react';
+import { Package, ShoppingBag, Users, Settings, LogOut, LayoutDashboard, Menu, X, ChevronRight, ChevronLeft, Plus, Edit, Trash2, Eye, Check } from 'lucide-react';
 import { translations } from '../translations';
 import type { Language } from '../translations';
 import { getImageUrl, MOCK_PRODUCTS as INITIAL_PRODUCTS } from './StoreFront';
@@ -20,12 +20,21 @@ export default function AdminDashboard() {
   
   const [products, setProducts] = useState(INITIAL_PRODUCTS);
   const [isProductModalOpen, setProductModalOpen] = useState(false);
+  
+  const [orders, setOrders] = useState(MOCK_ORDERS);
+  const [orderFilter, setOrderFilter] = useState('all');
 
   const t = translations[lang];
   const isRTL = lang === 'ar';
 
   const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
   const toggleCollapse = () => setIsCollapsed(!isCollapsed);
+
+  const markAsDelivered = (id: string) => {
+    setOrders(orders.map(order => order.id === id ? { ...order, status: 'delivered' } : order));
+  };
+
+  const filteredOrders = orders.filter(order => orderFilter === 'all' || order.status === orderFilter);
 
   return (
     <div className={`admin-container ${isRTL ? 'rtl-layout' : 'ltr-layout'}`} dir={isRTL ? 'rtl' : 'ltr'}>
@@ -48,6 +57,7 @@ export default function AdminDashboard() {
           <button className={`nav-btn ${activeTab === 'orders' ? 'active' : ''}`} onClick={() => setActiveTab('orders')} title={isRTL ? 'الطلبات' : 'Commandes'}>
             <ShoppingBag size={20} />
             <span className="nav-text">{isRTL ? 'الطلبات' : 'Commandes'}</span>
+            {!isCollapsed && <span className="nav-badge">{MOCK_ORDERS.length}</span>}
           </button>
           <button className={`nav-btn ${activeTab === 'products' ? 'active' : ''}`} onClick={() => setActiveTab('products')} title={isRTL ? 'المنتجات' : 'Produits'}>
             <Package size={20} />
@@ -169,7 +179,7 @@ export default function AdminDashboard() {
                 </button>
               </div>
 
-              <div className="table-responsive" style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+              <div className="table-responsive table-card">
                 <table className="admin-table">
                   <thead>
                     <tr>
@@ -213,7 +223,77 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {activeTab !== 'overview' && activeTab !== 'products' && (
+          {activeTab === 'orders' && (
+            <div className="orders-section">
+              <div className="section-header" style={{ marginBottom: '20px' }}>
+                <h2 className="section-title">{isRTL ? 'إدارة الطلبات' : 'Gestion des Commandes'}</h2>
+              </div>
+
+              {/* التبويبات للفلترة */}
+              <div className="orders-filters" style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                <button className={`filter-btn ${orderFilter === 'all' ? 'active' : ''}`} onClick={() => setOrderFilter('all')}>
+                  {isRTL ? 'الكل' : 'Tous'}
+                </button>
+                <button className={`filter-btn ${orderFilter === 'pending' ? 'active' : ''}`} onClick={() => setOrderFilter('pending')}>
+                  {isRTL ? 'قيد الانتظار' : 'En attente'}
+                </button>
+                <button className={`filter-btn ${orderFilter === 'delivered' ? 'active' : ''}`} onClick={() => setOrderFilter('delivered')}>
+                  {isRTL ? 'تم الاستلام' : 'Livrés'}
+                </button>
+              </div>
+
+              <div className="table-responsive table-card">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>{isRTL ? 'رقم الطلب' : 'ID Commande'}</th>
+                      <th>{isRTL ? 'العميل' : 'Client'}</th>
+                      <th>{isRTL ? 'المنتج' : 'Produit'}</th>
+                      <th>{isRTL ? 'المبلغ' : 'Montant'}</th>
+                      <th>{isRTL ? 'الحالة' : 'Statut'}</th>
+                      <th>{isRTL ? 'التاريخ' : 'Date'}</th>
+                      <th>{isRTL ? 'إجراءات' : 'Actions'}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredOrders.map((order) => (
+                      <tr key={order.id}>
+                        <td style={{ fontWeight: 600 }}>{order.id}</td>
+                        <td>{order.customer}</td>
+                        <td>{order.product}</td>
+                        <td style={{ color: 'var(--primary-color)', fontWeight: 'bold' }}>{order.total}</td>
+                        <td>
+                          <span className={`status-badge ${order.status}`}>
+                            {order.status === 'pending' ? (isRTL ? 'قيد الانتظار' : 'En attente') : 
+                             order.status === 'shipped' ? (isRTL ? 'تم الشحن' : 'Expédié') : 
+                             (isRTL ? 'تم التوصيل' : 'Livré')}
+                          </span>
+                        </td>
+                        <td>{order.date}</td>
+                        <td>
+                          <div style={{ display: 'flex', gap: '10px' }}>
+                            <button className="action-btn edit-btn" title={isRTL ? 'عرض التفاصيل' : 'Voir les détails'}>
+                              <Eye size={18} />
+                            </button>
+                            {order.status !== 'delivered' && (
+                              <button className="action-btn check-btn" onClick={() => markAsDelivered(order.id)} title={isRTL ? 'تحديد كمستلم' : 'Marquer comme livré'}>
+                                <Check size={18} />
+                              </button>
+                            )}
+                            <button className="action-btn delete-btn" title={isRTL ? 'حذف' : 'Supprimer'}>
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab !== 'overview' && activeTab !== 'products' && activeTab !== 'orders' && (
             <div className="placeholder-section">
               <h2>{isRTL ? 'هذا القسم قيد التطوير' : 'Cette section est en cours de développement'}</h2>
               <p>{isRTL ? 'سيتم إضافة المحتوى قريباً.' : 'Le contenu sera ajouté bientôt.'}</p>
