@@ -40,6 +40,13 @@ const MOCK_PRODUCTS = [
   }
 ];
 
+// دالة مساعدة لإصلاح مسار الصور في GitHub Pages
+const getImageUrl = (url: string) => {
+  if (url.startsWith('http')) return url;
+  const base = import.meta.env.BASE_URL || '/';
+  return url.startsWith('/') ? `${base}${url.slice(1)}` : `${base}${url}`;
+};
+
 function App() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [activeCategory, setActiveCategory] = useState('Tous');
@@ -59,7 +66,7 @@ function App() {
       <header className="header">
         <div className="container header-content">
           <div className="logo-section">
-            <img src="/image.png" alt="Adil Logo" className="logo-img" />
+            <img src={getImageUrl("/image.png")} alt="Adil Logo" className="logo-img" />
             <h1 className="logo">Adil E-commerce</h1>
           </div>
           
@@ -70,9 +77,9 @@ function App() {
               onChange={(e) => setLang(e.target.value as Language)}
               className="lang-select"
             >
-              <option value="fr">Français (FR)</option>
-              <option value="ar">العربية (AR)</option>
-              <option value="en">English (EN)</option>
+              <option value="fr">FR</option>
+              <option value="ar">AR</option>
+              <option value="en">EN</option>
             </select>
           </div>
         </div>
@@ -127,7 +134,7 @@ function App() {
             {filteredProducts.map((product) => (
               <div key={product.id} className="product-card">
                 <div className="product-image-container">
-                  <img src={product.image} alt={product.name} className="product-image" />
+                  <img src={getImageUrl(product.image)} alt={product.name} className="product-image" />
                   {!product.inStock && <span className="badge out-of-stock">{t.rupture}</span>}
                 </div>
                 <div className="product-info">
@@ -156,7 +163,7 @@ function App() {
             <div className="modal-body">
               <div className="modal-image-wrapper">
                 {/* هنا الصورة تأخذ راحتها بالكامل دون أي قص */}
-                <img src={selectedProduct.image} alt={selectedProduct.name} />
+                <img src={getImageUrl(selectedProduct.image)} alt={selectedProduct.name} />
               </div>
               <div className="modal-details">
                 <h2>{selectedProduct.name}</h2>
