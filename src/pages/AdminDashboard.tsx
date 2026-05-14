@@ -230,7 +230,45 @@ export default function AdminDashboard() {
               <h2 style={{ margin: 0 }}>{isRTL ? 'إضافة منتج جديد' : 'Ajouter un nouveau produit'}</h2>
               <button onClick={() => setProductModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={24} /></button>
             </div>
-            <p>{isRTL ? 'نموذج إضافة المنتج سيظهر هنا لاحقاً.' : 'Le formulaire d\'ajout de produit apparaîtra ici plus tard.'}</p>
+            <form className="modal-form" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                <label style={{ fontWeight: 500 }}>{isRTL ? 'اسم المنتج' : 'Nom du produit'}</label>
+                <input type="text" placeholder={isRTL ? 'مثال: حقيبة جلدية' : 'Ex: Sac en cuir'} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }} required />
+              </div>
+
+              <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                <label style={{ fontWeight: 500 }}>{isRTL ? 'التصنيف' : 'Catégorie'}</label>
+                <select style={{ padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }} required>
+                  <option value="Sacs">{isRTL ? 'حقائب' : 'Sacs'}</option>
+                  <option value="Sacs à dos">{isRTL ? 'حقائب ظهر' : 'Sacs à dos'}</option>
+                  <option value="Portefeuilles">{isRTL ? 'محافظ' : 'Portefeuilles'}</option>
+                  <option value="Voyage">{isRTL ? 'سفر' : 'Voyage'}</option>
+                </select>
+              </div>
+
+              <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                <label style={{ fontWeight: 500 }}>{isRTL ? 'السعر (DH)' : 'Prix (DH)'}</label>
+                <input type="text" placeholder="Ex: 350 DH" style={{ padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }} required />
+              </div>
+
+              <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                <label style={{ fontWeight: 500 }}>{isRTL ? 'صورة المنتج' : 'Image du produit'}</label>
+                <div style={{ border: '2px dashed #cbd5e1', borderRadius: '8px', padding: '20px', textAlign: 'center', cursor: 'pointer', backgroundColor: '#f8fafc', transition: 'border-color 0.2s' }}
+                     onMouseOver={(e) => e.currentTarget.style.borderColor = 'var(--primary-color)'}
+                     onMouseOut={(e) => e.currentTarget.style.borderColor = '#cbd5e1'}>
+                  <input type="file" accept="image/*" style={{ display: 'none' }} id="product-image-upload" />
+                  <label htmlFor="product-image-upload" style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                    <Package size={24} style={{ color: '#64748b' }} />
+                    <span style={{ color: '#64748b', fontSize: '0.9rem' }}>{isRTL ? 'اضغط هنا لرفع صورة للمنتج' : 'Cliquez ici pour télécharger une image'}</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <input type="checkbox" id="inStock" defaultChecked style={{ width: '18px', height: '18px' }} />
+                <label htmlFor="inStock" style={{ fontWeight: 500 }}>{isRTL ? 'متوفر في المخزون' : 'En stock'}</label>
+              </div>
+            </form>
             <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
               <button onClick={() => setProductModalOpen(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff', cursor: 'pointer' }}>
                 {isRTL ? 'إلغاء' : 'Annuler'}
