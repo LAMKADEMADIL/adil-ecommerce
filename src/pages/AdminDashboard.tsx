@@ -30,6 +30,11 @@ export default function AdminDashboard() {
   
   const [orders, setOrders] = useState(MOCK_ORDERS);
   const [orderFilter, setOrderFilter] = useState('all');
+  
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
 
   const t = translations[lang];
   const isRTL = lang === 'ar';
@@ -43,6 +48,49 @@ export default function AdminDashboard() {
   };
 
   const filteredOrders = orders.filter(order => orderFilter === 'all' || order.status === orderFilter);
+
+  if (!isAuthenticated) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f8fafc' }}>
+        <div style={{ backgroundColor: '#fff', padding: '40px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', width: '100%', maxWidth: '400px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+            <div style={{ width: '60px', height: '60px', backgroundColor: 'var(--primary-color)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 15px' }}>
+              <Users size={30} style={{ color: '#fff' }} />
+            </div>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1e293b' }}>{isRTL ? 'تسجيل الدخول للإدارة' : 'Connexion Admin'}</h1>
+            <p style={{ color: '#64748b', marginTop: '5px' }}>{isRTL ? 'أدخل بياناتك للمتابعة' : 'Entrez vos identifiants pour continuer'}</p>
+          </div>
+          
+          <form style={{ display: 'flex', flexDirection: 'column', gap: '20px' }} onSubmit={(e) => {
+            e.preventDefault();
+            if (email === 'admin@adil.com' && password === 'admin123') {
+              setIsAuthenticated(true);
+            } else {
+              setLoginError(isRTL ? 'بيانات غير صحيحة!' : 'Identifiants incorrects!');
+            }
+          }}>
+            <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+              <label style={{ fontWeight: 500 }}>{isRTL ? 'البريد الإلكتروني' : 'Email'}</label>
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@adil.com" style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }} required />
+            </div>
+            
+            <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+              <label style={{ fontWeight: 500 }}>{isRTL ? 'كلمة المرور' : 'Mot de passe'}</label>
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }} required />
+            </div>
+            
+            {loginError && <p style={{ color: '#ef4444', fontSize: '0.9rem', textAlign: 'center' }}>{loginError}</p>}
+            
+            <button type="submit" style={{ padding: '12px', borderRadius: '8px', border: 'none', background: 'var(--primary-color)', color: '#fff', fontWeight: 'bold', cursor: 'pointer', transition: 'background-color 0.2s' }}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1d4ed8'}
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'var(--primary-color)'}>
+              {isRTL ? 'دخول' : 'Se connecter'}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`admin-container ${isRTL ? 'rtl-layout' : 'ltr-layout'}`} dir={isRTL ? 'rtl' : 'ltr'}>
@@ -88,7 +136,7 @@ export default function AdminDashboard() {
         </button>
 
         <div className="sidebar-footer">
-          <button className="nav-btn logout" title={isRTL ? 'تسجيل الخروج' : 'Déconnexion'}>
+          <button className="nav-btn logout" onClick={() => setIsAuthenticated(false)} title={isRTL ? 'تسجيل الخروج' : 'Déconnexion'}>
             <LogOut size={20} />
             <span className="nav-text">{isRTL ? 'تسجيل الخروج' : 'Déconnexion'}</span>
           </button>
