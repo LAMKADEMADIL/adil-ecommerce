@@ -5,7 +5,7 @@ import type { Language } from '../translations';
 import { getImageUrl, MOCK_PRODUCTS as INITIAL_PRODUCTS } from './StoreFront';
 import './AdminDashboard.css';
 import { db } from '../firebase';
-import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
 
 // بيانات وهمية للطلبات
 const MOCK_ORDERS = [
@@ -30,6 +30,9 @@ export default function AdminDashboard() {
   const [products, setProducts] = useState<any[]>([]);
   const [isProductModalOpen, setProductModalOpen] = useState(false);
   
+  const [orders, setOrders] = useState<any[]>([]);
+  const [orderFilter, setOrderFilter] = useState('all');
+  
   const [newProduct, setNewProduct] = useState({
     name: '',
     price: '',
@@ -40,6 +43,22 @@ export default function AdminDashboard() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [editingProductId, setEditingProductId] = useState('');
+
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [isOrderModalOpen, setOrderModalOpen] = useState(false);
+
+  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+  const [isCustomerModalOpen, setCustomerModalOpen] = useState(false);
+
+  const handleViewOrder = (order: any) => {
+    setSelectedOrder(order);
+    setOrderModalOpen(true);
+  };
+
+  const handleViewCustomer = (customer: any) => {
+    setSelectedCustomer(customer);
+    setCustomerModalOpen(true);
+  };
 
   // Fetch products from Firestore
   const fetchProducts = async () => {
@@ -52,8 +71,81 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchOrders = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "orders"));
+      const ordersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setOrders(ordersData);
+    } catch (e) {
+      console.error("Error fetching orders: ", e);
+    }
+  };
+
+  const [storeSettings, setStoreSettings] = useState({
+    storeName: 'Adil E-commerce',
+    whatsapp: '+212 600000000',
+    email: 'contact@adil.com',
+    currency: 'DH'
+  });
+
+  const fetchSettings = async () => {
+    try {
+      const docRef = doc(db, "settings", "store");
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        setStoreSettings(docSnap.data() as any);
+      }
+    } catch (e) {
+      console.error("Error fetching settings: ", e);
+    }
+  };
+
   useEffect(() => {
     fetchProducts();
+    fetchOrders();
+    fetchSettings();
+  }, []);
+
+  const handleSaveSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await setDoc(doc(db, "settings", "store"), storeSettings);
+      alert(isRTL ? 'تم حفظ الإعدادات بنجاح!' : 'Paramètres enregistrés avec succès!');
+    } catch (e) {
+      console.error("Error saving settings: ", e);
+      alert("Error saving settings.");
+    }
+  };
+
+  const totalSales = orders.reduce((sum, order) => {
+    const totalStr = order.total ? String(order.total) : '';
+    const priceNum = parseFloat(totalStr.replace(/[^0-9.]/g, '')) || 0;
+    return sum + priceNum;
+  }, 0);
+
+  const pendingOrdersCount = orders.filter(o => o.status === 'pending').length;
+
+  const filteredOrders = orderFilter === 'all' 
+    ? orders 
+    : orders.filter(o => o.status === orderFilter);
+
+  const extractedCustomers = orders.reduce((acc: any[], order) => {
+    const existingCustomer = acc.find(c => c.phone === order.phone);
+    const priceNum = parseFloat(order.total?.replace(/[^0-9.]/g, '')) || 0;
+    
+    if (existingCustomer) {
+      existingCustomer.orders += 1;
+      existingCustomer.totalSpent += priceNum;
+    } else {
+      acc.push({
+        id: order.id,
+        name: order.customer,
+        phone: order.phone,
+        orders: 1,
+        totalSpent: priceNum
+      });
+    }
+    return acc;
   }, []);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -118,9 +210,6 @@ export default function AdminDashboard() {
     }
   };
   
-  const [orders, setOrders] = useState(MOCK_ORDERS);
-  const [orderFilter, setOrderFilter] = useState('all');
-  
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -137,7 +226,7 @@ export default function AdminDashboard() {
     setOrders(orders.map(order => order.id === id ? { ...order, status: 'delivered' } : order));
   };
 
-  const filteredOrders = orders.filter(order => orderFilter === 'all' || order.status === orderFilter);
+
 
   if (!isAuthenticated) {
     return (
@@ -203,7 +292,7 @@ export default function AdminDashboard() {
           <button className={`nav-btn ${activeTab === 'orders' ? 'active' : ''}`} onClick={() => setActiveTab('orders')} title={isRTL ? 'الطلبات' : 'Commandes'}>
             <ShoppingBag size={20} />
             <span className="nav-text">{isRTL ? 'الطلبات' : 'Commandes'}</span>
-            {!isCollapsed && <span className="nav-badge">{MOCK_ORDERS.length}</span>}
+            {!isCollapsed && <span className="nav-badge">{orders.length}</span>}
           </button>
           <button className={`nav-btn ${activeTab === 'products' ? 'active' : ''}`} onClick={() => setActiveTab('products')} title={isRTL ? 'المنتجات' : 'Produits'}>
             <Package size={20} />
@@ -266,11 +355,11 @@ export default function AdminDashboard() {
               <div className="stats-grid">
                 <div className="stat-card">
                   <h3>{isRTL ? 'إجمالي المبيعات' : 'Ventes Totales'}</h3>
-                  <p className="stat-value">4,500 DH</p>
+                  <p className="stat-value">{totalSales} DH</p>
                 </div>
                 <div className="stat-card">
                   <h3>{isRTL ? 'الطلبات الجديدة' : 'Nouvelles Commandes'}</h3>
-                  <p className="stat-value">12</p>
+                  <p className="stat-value">{pendingOrdersCount}</p>
                 </div>
                 <div className="stat-card">
                   <h3>{isRTL ? 'الزوار اليوم' : 'Visiteurs Aujourd\'hui'}</h3>
@@ -293,12 +382,12 @@ export default function AdminDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {MOCK_ORDERS.map((order) => (
+                      {orders.slice(0, 5).map((order) => (
                         <tr key={order.id}>
-                          <td>{order.id}</td>
+                          <td style={{ fontWeight: 600 }} title={String(order.id)}>{String(order.id).length > 6 ? `${String(order.id).substring(0, 6)}...` : String(order.id)}</td>
                           <td>{order.customer}</td>
                           <td>{order.product}</td>
-                          <td>{order.total}</td>
+                          <td style={{ color: 'var(--primary-color)', fontWeight: 'bold' }}>{order.total}</td>
                           <td>
                             <span className={`status-badge ${order.status}`}>
                               {order.status === 'pending' ? (isRTL ? 'قيد الانتظار' : 'En attente') : 
@@ -405,7 +494,7 @@ export default function AdminDashboard() {
                   <tbody>
                     {filteredOrders.map((order) => (
                       <tr key={order.id}>
-                        <td style={{ fontWeight: 600 }}>{order.id}</td>
+                        <td style={{ fontWeight: 600 }} title={String(order.id)}>{String(order.id).length > 6 ? `${String(order.id).substring(0, 6)}...` : String(order.id)}</td>
                         <td>{order.customer}</td>
                         <td>{order.product}</td>
                         <td style={{ color: 'var(--primary-color)', fontWeight: 'bold' }}>{order.total}</td>
@@ -419,7 +508,7 @@ export default function AdminDashboard() {
                         <td>{order.date}</td>
                         <td>
                           <div style={{ display: 'flex', gap: '10px' }}>
-                            <button className="action-btn edit-btn" title={isRTL ? 'عرض التفاصيل' : 'Voir les détails'}>
+                            <button className="action-btn edit-btn" title={isRTL ? 'عرض التفاصيل' : 'Voir les détails'} onClick={() => handleViewOrder(order)}>
                               <Eye size={18} />
                             </button>
                             {order.status !== 'delivered' && (
@@ -451,22 +540,22 @@ export default function AdminDashboard() {
                   <thead>
                     <tr>
                       <th>{isRTL ? 'الاسم' : 'Nom'}</th>
-                      <th>{isRTL ? 'البريد الإلكتروني' : 'Email'}</th>
+                      <th>{isRTL ? 'الهاتف' : 'Téléphone'}</th>
                       <th>{isRTL ? 'عدد الطلبات' : 'Commandes'}</th>
                       <th>{isRTL ? 'إجمالي الإنفاق' : 'Total dépensé'}</th>
                       <th>{isRTL ? 'إجراءات' : 'Actions'}</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {MOCK_CUSTOMERS.map((customer) => (
+                    {extractedCustomers.map((customer) => (
                       <tr key={customer.id}>
                         <td style={{ fontWeight: 500 }}>{customer.name}</td>
-                        <td>{customer.email}</td>
+                        <td>{customer.phone}</td>
                         <td>{customer.orders}</td>
-                        <td style={{ color: 'var(--primary-color)', fontWeight: 'bold' }}>{customer.totalSpent}</td>
+                        <td style={{ color: 'var(--primary-color)', fontWeight: 'bold' }}>{customer.totalSpent} DH</td>
                         <td>
                           <div style={{ display: 'flex', gap: '10px' }}>
-                            <button className="action-btn edit-btn" title={isRTL ? 'عرض التفاصيل' : 'Voir les détails'}>
+                            <button className="action-btn edit-btn" title={isRTL ? 'عرض التفاصيل' : 'Voir les détails'} onClick={() => handleViewCustomer(customer)}>
                               <Eye size={18} />
                             </button>
                             <button className="action-btn delete-btn" title={isRTL ? 'حذف' : 'Supprimer'}>
@@ -489,32 +578,32 @@ export default function AdminDashboard() {
               </div>
 
               <div className="table-card" style={{ maxWidth: '600px' }}>
-                <form className="modal-form" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <form className="modal-form" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }} onSubmit={handleSaveSettings}>
                   <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                     <label style={{ fontWeight: 500 }}>{isRTL ? 'اسم المتجر' : 'Nom de la boutique'}</label>
-                    <input type="text" defaultValue="Adil E-commerce" style={{ padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+                    <input type="text" value={storeSettings.storeName} onChange={(e) => setStoreSettings({...storeSettings, storeName: e.target.value})} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }} required />
                   </div>
 
                   <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                     <label style={{ fontWeight: 500 }}>{isRTL ? 'رقم الواتساب' : 'Numéro WhatsApp'}</label>
-                    <input type="text" defaultValue="+212 600000000" style={{ padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+                    <input type="text" value={storeSettings.whatsapp} onChange={(e) => setStoreSettings({...storeSettings, whatsapp: e.target.value})} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }} required />
                   </div>
 
                   <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                     <label style={{ fontWeight: 500 }}>{isRTL ? 'البريد الإلكتروني' : 'Email de contact'}</label>
-                    <input type="email" defaultValue="contact@adil.com" style={{ padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+                    <input type="email" value={storeSettings.email} onChange={(e) => setStoreSettings({...storeSettings, email: e.target.value})} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }} required />
                   </div>
 
                   <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                     <label style={{ fontWeight: 500 }}>{isRTL ? 'العملة' : 'Devise'}</label>
-                    <select style={{ padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                    <select value={storeSettings.currency} onChange={(e) => setStoreSettings({...storeSettings, currency: e.target.value})} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                       <option value="DH">DH (Dirham Marocain)</option>
                       <option value="$">$ (Dollar)</option>
                       <option value="€">€ (Euro)</option>
                     </select>
                   </div>
 
-                  <button className="btn-primary" style={{ alignSelf: 'flex-start', padding: '10px 20px', backgroundColor: 'var(--primary-color)', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+                  <button type="submit" className="btn-primary" style={{ alignSelf: 'flex-start', padding: '10px 20px', backgroundColor: 'var(--primary-color)', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
                     {isRTL ? 'حفظ التغييرات' : 'Enregistrer les modifications'}
                   </button>
                 </form>
@@ -595,7 +684,155 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+      {/* Order Details Modal */}
+      {isOrderModalOpen && selectedOrder && (
+        <div className="sidebar-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }} onClick={() => setOrderModalOpen(false)}>
+          <div className="modal-content" style={{ backgroundColor: '#fff', padding: '30px', borderRadius: '12px', width: '90%', maxWidth: '500px' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ margin: 0 }}>{isRTL ? 'تفاصيل الطلب' : 'Détails de la commande'}</h2>
+              <button onClick={() => setOrderModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={24} /></button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
+                <span style={{ fontWeight: 'bold' }}>{isRTL ? 'رقم الطلب:' : 'ID Commande:'}</span>
+                <span>{selectedOrder.id}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
+                <span style={{ fontWeight: 'bold' }}>{isRTL ? 'العميل:' : 'Client:'}</span>
+                <span>{selectedOrder.customer}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
+                <span style={{ fontWeight: 'bold' }}>{isRTL ? 'الهاتف:' : 'Téléphone:'}</span>
+                <span>{selectedOrder.phone}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
+                <span style={{ fontWeight: 'bold' }}>{isRTL ? 'المدينة:' : 'Ville:'}</span>
+                <span>{selectedOrder.city}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
+                <span style={{ fontWeight: 'bold' }}>{isRTL ? 'المنتج:' : 'Produit:'}</span>
+                <span>{selectedOrder.product}</span>
+              </div>
+              {(() => {
+                const orderedProduct = products.find(p => p.name === selectedOrder.product);
+                if (orderedProduct?.image) {
+                  return (
+                    <div style={{ display: 'flex', justifyContent: 'center', margin: '10px 0' }}>
+                      <img 
+                        src={orderedProduct.image.startsWith('data:image/') ? orderedProduct.image : getImageUrl(orderedProduct.image)} 
+                        alt={selectedOrder.product} 
+                        style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #e2e8f0' }} 
+                      />
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
+                <span style={{ fontWeight: 'bold' }}>{isRTL ? 'المبلغ:' : 'Montant:'}</span>
+                <span style={{ color: 'var(--primary-color)', fontWeight: 'bold' }}>{selectedOrder.total}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
+                <span style={{ fontWeight: 'bold' }}>{isRTL ? 'الحالة:' : 'Statut:'}</span>
+                <span className={`status-badge ${selectedOrder.status}`}>
+                  {selectedOrder.status === 'pending' ? (isRTL ? 'قيد الانتظار' : 'En attente') : 
+                   selectedOrder.status === 'shipped' ? (isRTL ? 'تم الشحن' : 'Expédié') : 
+                   (isRTL ? 'تم التوصيل' : 'Livré')}
+                </span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ fontWeight: 'bold' }}>{isRTL ? 'التاريخ:' : 'Date:'}</span>
+                <span>{selectedOrder.date}</span>
+              </div>
+            </div>
+            <div style={{ marginTop: '30px', display: 'flex', justifyContent: 'flex-end' }}>
+              <button onClick={() => setOrderModalOpen(false)} style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: 'var(--primary-color)', color: '#fff', cursor: 'pointer', fontWeight: 'bold' }}>
+                {isRTL ? 'إغلاق' : 'Fermer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Customer Details Modal */}
+      {isCustomerModalOpen && selectedCustomer && (
+        <div className="sidebar-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }} onClick={() => setCustomerModalOpen(false)}>
+          <div className="modal-content" style={{ backgroundColor: '#fff', padding: '30px', borderRadius: '12px', width: '90%', maxWidth: '600px' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ margin: 0 }}>{isRTL ? 'تفاصيل العميل' : 'Détails du Client'}</h2>
+              <button onClick={() => setCustomerModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={24} /></button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
+                <span style={{ fontWeight: 'bold' }}>{isRTL ? 'الاسم:' : 'Nom:'}</span>
+                <span>{selectedCustomer.name}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
+                <span style={{ fontWeight: 'bold' }}>{isRTL ? 'الهاتف:' : 'Téléphone:'}</span>
+                <span>{selectedCustomer.phone}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
+                <span style={{ fontWeight: 'bold' }}>{isRTL ? 'إجمالي الطلبات:' : 'Total Commandes:'}</span>
+                <span>{selectedCustomer.orders}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
+                <span style={{ fontWeight: 'bold' }}>{isRTL ? 'إجمالي الإنفاق:' : 'Total Dépensé:'}</span>
+                <span style={{ color: 'var(--primary-color)', fontWeight: 'bold' }}>{selectedCustomer.totalSpent} DH</span>
+              </div>
 
+              <h3 style={{ marginTop: '15px', marginBottom: '10px' }}>{isRTL ? 'تاريخ الطلبات' : 'Historique des Commandes'}</h3>
+              <div className="table-responsive">
+                <table className="admin-table" style={{ fontSize: '0.9rem' }}>
+                  <thead>
+                    <tr>
+                      <th>{isRTL ? 'الصورة' : 'Image'}</th>
+                      <th>{isRTL ? 'رقم الطلب' : 'ID'}</th>
+                      <th>{isRTL ? 'المنتج' : 'Produit'}</th>
+                      <th>{isRTL ? 'المبلغ' : 'Montant'}</th>
+                      <th>{isRTL ? 'الحالة' : 'Statut'}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {orders.filter(o => o.phone === selectedCustomer.phone).map((order) => (
+                      <tr key={order.id}>
+                        <td>
+                          {(() => {
+                            const orderedProduct = products.find(p => p.name === order.product);
+                            if (orderedProduct?.image) {
+                              return (
+                                <img 
+                                  src={orderedProduct.image.startsWith('data:image/') ? orderedProduct.image : getImageUrl(orderedProduct.image)} 
+                                  alt={order.product} 
+                                  style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} 
+                                />
+                              );
+                            }
+                            return null;
+                          })()}
+                        </td>
+                        <td title={String(order.id)}>{String(order.id).length > 6 ? `${String(order.id).substring(0, 6)}...` : String(order.id)}</td>
+                        <td>{order.product}</td>
+                        <td>{order.total}</td>
+                        <td>
+                          <span className={`status-badge ${order.status}`}>
+                            {order.status === 'pending' ? (isRTL ? 'قيد الانتظار' : 'En attente') : 
+                             order.status === 'shipped' ? (isRTL ? 'تم الشحن' : 'Expédié') : 
+                             (isRTL ? 'تم التوصيل' : 'Livré')}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div style={{ marginTop: '30px', display: 'flex', justifyContent: 'flex-end' }}>
+              <button onClick={() => setCustomerModalOpen(false)} style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: 'var(--primary-color)', color: '#fff', cursor: 'pointer', fontWeight: 'bold' }}>
+                {isRTL ? 'إغلاق' : 'Fermer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Overlay for mobile sidebar */}
       {isSidebarOpen && <div className="sidebar-overlay" onClick={toggleSidebar}></div>}
     </div>
