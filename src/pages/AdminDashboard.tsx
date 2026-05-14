@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Package, ShoppingBag, Users, Settings, LogOut, LayoutDashboard, Menu, X, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Package, ShoppingBag, Users, Settings, LogOut, LayoutDashboard, Menu, X, ChevronRight, ChevronLeft, Plus, Edit, Trash2 } from 'lucide-react';
 import { translations } from '../translations';
 import type { Language } from '../translations';
-import { getImageUrl } from './StoreFront'; // Reusing the helper
+import { getImageUrl, MOCK_PRODUCTS as INITIAL_PRODUCTS } from './StoreFront';
 import './AdminDashboard.css';
 
 // بيانات وهمية للطلبات
@@ -15,8 +15,11 @@ const MOCK_ORDERS = [
 export default function AdminDashboard() {
   const [isSidebarOpen, setSidebarOpen] = useState(false); // For mobile overlay
   const [isCollapsed, setIsCollapsed] = useState(false); // For desktop collapse
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('products'); // Set to products by default for testing
   const [lang, setLang] = useState<Language>('ar'); // Default to Arabic for admin
+  
+  const [products, setProducts] = useState(INITIAL_PRODUCTS);
+  const [isProductModalOpen, setProductModalOpen] = useState(false);
 
   const t = translations[lang];
   const isRTL = lang === 'ar';
@@ -156,7 +159,61 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {activeTab !== 'overview' && (
+          {activeTab === 'products' && (
+            <div className="products-section">
+              <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2 className="section-title" style={{ margin: 0 }}>{isRTL ? 'إدارة المنتجات' : 'Gestion des Produits'}</h2>
+                <button className="btn-primary" onClick={() => setProductModalOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', backgroundColor: 'var(--primary-color)', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
+                  <Plus size={18} />
+                  {isRTL ? 'إضافة منتج' : 'Ajouter un Produit'}
+                </button>
+              </div>
+
+              <div className="table-responsive" style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>{isRTL ? 'الصورة' : 'Image'}</th>
+                      <th>{isRTL ? 'الاسم' : 'Nom'}</th>
+                      <th>{isRTL ? 'التصنيف' : 'Catégorie'}</th>
+                      <th>{isRTL ? 'السعر' : 'Prix'}</th>
+                      <th>{isRTL ? 'المخزون' : 'Stock'}</th>
+                      <th>{isRTL ? 'إجراءات' : 'Actions'}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {products.map((product) => (
+                      <tr key={product.id}>
+                        <td>
+                          <img src={getImageUrl(product.image)} alt={product.name} style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '8px' }} />
+                        </td>
+                        <td style={{ fontWeight: 500 }}>{product.name}</td>
+                        <td>{product.category}</td>
+                        <td style={{ color: 'var(--primary-color)', fontWeight: 'bold' }}>{product.price}</td>
+                        <td>
+                          <span className={`status-badge ${product.inStock ? 'delivered' : 'pending'}`}>
+                            {product.inStock ? (isRTL ? 'متوفر' : 'En stock') : (isRTL ? 'نفد' : 'Rupture')}
+                          </span>
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', gap: '10px' }}>
+                            <button className="action-btn edit-btn" title={isRTL ? 'تعديل' : 'Modifier'}>
+                              <Edit size={20} />
+                            </button>
+                            <button className="action-btn delete-btn" title={isRTL ? 'حذف' : 'Supprimer'}>
+                              <Trash2 size={20} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab !== 'overview' && activeTab !== 'products' && (
             <div className="placeholder-section">
               <h2>{isRTL ? 'هذا القسم قيد التطوير' : 'Cette section est en cours de développement'}</h2>
               <p>{isRTL ? 'سيتم إضافة المحتوى قريباً.' : 'Le contenu sera ajouté bientôt.'}</p>
@@ -164,6 +221,27 @@ export default function AdminDashboard() {
           )}
         </div>
       </main>
+
+      {/* Product Modal Placeholder */}
+      {isProductModalOpen && (
+        <div className="sidebar-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }} onClick={() => setProductModalOpen(false)}>
+          <div className="modal-content" style={{ backgroundColor: '#fff', padding: '30px', borderRadius: '12px', width: '90%', maxWidth: '500px' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ margin: 0 }}>{isRTL ? 'إضافة منتج جديد' : 'Ajouter un nouveau produit'}</h2>
+              <button onClick={() => setProductModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={24} /></button>
+            </div>
+            <p>{isRTL ? 'نموذج إضافة المنتج سيظهر هنا لاحقاً.' : 'Le formulaire d\'ajout de produit apparaîtra ici plus tard.'}</p>
+            <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button onClick={() => setProductModalOpen(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff', cursor: 'pointer' }}>
+                {isRTL ? 'إلغاء' : 'Annuler'}
+              </button>
+              <button style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: 'var(--primary-color)', color: '#fff', cursor: 'pointer' }}>
+                {isRTL ? 'حفظ' : 'Enregistrer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Overlay for mobile sidebar */}
       {isSidebarOpen && <div className="sidebar-overlay" onClick={toggleSidebar}></div>}
