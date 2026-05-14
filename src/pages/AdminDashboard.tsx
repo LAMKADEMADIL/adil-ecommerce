@@ -62,6 +62,7 @@ export default function AdminDashboard() {
           <button className={`nav-btn ${activeTab === 'products' ? 'active' : ''}`} onClick={() => setActiveTab('products')} title={isRTL ? 'المنتجات' : 'Produits'}>
             <Package size={20} />
             <span className="nav-text">{isRTL ? 'المنتجات' : 'Produits'}</span>
+            {!isCollapsed && <span className="nav-badge">{products.length}</span>}
           </button>
           <button className={`nav-btn ${activeTab === 'customers' ? 'active' : ''}`} onClick={() => setActiveTab('customers')} title={isRTL ? 'العملاء' : 'Clients'}>
             <Users size={20} />
