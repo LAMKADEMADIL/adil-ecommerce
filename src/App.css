@@ -288,26 +288,52 @@
   width: 100%;
 }
 
-/* زر الواتساب العائم */
-.floating-whatsapp {
+/* أزرار التواصل العائمة (تصميم المربعات المنحنية) */
+.floating-contacts {
   position: fixed;
   bottom: 30px;
   right: 30px;
-  background-color: #25d366;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  box-shadow: 0 5px 15px rgba(37, 211, 102, 0.4);
-  z-index: 999;
-  transition: transform 0.3s ease;
-  text-decoration: none;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 99;
 }
 
-.floating-whatsapp:hover {
-  transform: scale(1.1);
+.rtl-layout .floating-contacts {
+  right: auto;
+  left: 30px;
+}
+
+.floating-btn {
+  width: 50px;
+  height: 50px;
+  border-radius: 14px; /* زوايا منحنية فخمة مثل أيقونات التطبيقات */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.floating-btn:hover {
+  transform: translateY(-5px) scale(1.05);
+}
+
+/* ألوان متناسقة مع الموقع (أزرق فاتح مع أيقونة زرقاء) */
+.phone-btn {
+  background-color: #eff6ff;
+  color: var(--primary-color);
+}
+
+.email-btn {
+  background-color: #eff6ff;
+  color: var(--primary-color);
+}
+
+/* الواتساب يعود للونه الأخضر الأصلي الجميل */
+.wa-btn {
+  background-color: #25d366;
+  color: white;
 }
 
 .wa-icon {
