@@ -23,7 +23,7 @@ export default function AdminDashboard() {
   const [isSidebarOpen, setSidebarOpen] = useState(false); // For mobile overlay
   const [isCollapsed, setIsCollapsed] = useState(false); // For desktop collapse
   const [activeTab, setActiveTab] = useState('products'); // Set to products by default for testing
-  const [lang, setLang] = useState<Language>('ar'); // Default to Arabic for admin
+  const [lang, setLang] = useState<Language>('fr'); // Default to French for admin
   
   const [products, setProducts] = useState(INITIAL_PRODUCTS);
   const [isProductModalOpen, setProductModalOpen] = useState(false);
@@ -343,7 +343,47 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {activeTab !== 'overview' && activeTab !== 'products' && activeTab !== 'orders' && activeTab !== 'customers' && (
+          {activeTab === 'settings' && (
+            <div className="settings-section">
+              <div className="section-header" style={{ marginBottom: '20px' }}>
+                <h2 className="section-title">{isRTL ? 'الإعدادات العامة' : 'Paramètres Généraux'}</h2>
+              </div>
+
+              <div className="table-card" style={{ maxWidth: '600px' }}>
+                <form className="modal-form" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                    <label style={{ fontWeight: 500 }}>{isRTL ? 'اسم المتجر' : 'Nom de la boutique'}</label>
+                    <input type="text" defaultValue="Adil E-commerce" style={{ padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+                  </div>
+
+                  <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                    <label style={{ fontWeight: 500 }}>{isRTL ? 'رقم الواتساب' : 'Numéro WhatsApp'}</label>
+                    <input type="text" defaultValue="+212 600000000" style={{ padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+                  </div>
+
+                  <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                    <label style={{ fontWeight: 500 }}>{isRTL ? 'البريد الإلكتروني' : 'Email de contact'}</label>
+                    <input type="email" defaultValue="contact@adil.com" style={{ padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+                  </div>
+
+                  <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                    <label style={{ fontWeight: 500 }}>{isRTL ? 'العملة' : 'Devise'}</label>
+                    <select style={{ padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                      <option value="DH">DH (Dirham Marocain)</option>
+                      <option value="$">$ (Dollar)</option>
+                      <option value="€">€ (Euro)</option>
+                    </select>
+                  </div>
+
+                  <button className="btn-primary" style={{ alignSelf: 'flex-start', padding: '10px 20px', backgroundColor: 'var(--primary-color)', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+                    {isRTL ? 'حفظ التغييرات' : 'Enregistrer les modifications'}
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {activeTab !== 'overview' && activeTab !== 'products' && activeTab !== 'orders' && activeTab !== 'customers' && activeTab !== 'settings' && (
             <div className="placeholder-section">
               <h2>{isRTL ? 'هذا القسم قيد التطوير' : 'Cette section est en cours de développement'}</h2>
               <p>{isRTL ? 'سيتم إضافة المحتوى قريباً.' : 'Le contenu sera ajouté bientôt.'}</p>
