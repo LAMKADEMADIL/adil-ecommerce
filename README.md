@@ -13,3 +13,24 @@ Une plateforme e-commerce moderne (SPA) dédiée à la vente de portefeuilles et
 - **Frontend** : React.js (Vite), TypeScript, Vanilla CSS
 - **Backend / DB** : Firebase (Firestore)
 - **Design** : Entièrement Responsive (Desktop, Mobile, Tablette)
+
+## Roadmap de Développement (Plan)
+
+### 📍 Étape 1 : Design et Interfaces (UI/UX) - [En cours]
+- [x] Structure globale (Sidebar & Header)
+- [x] Page **Produits** (Tableau & Modal)
+- [x] Page **Commandes** (Tableau & Filtres)
+- [ ] Page **Clients** (Liste des clients)
+- [ ] Page **Paramètres** (Configuration)
+
+### 📍 Étape 2 : Sécurité et Authentification (Auth)
+- [ ] Page de connexion Admin (Login)
+- [ ] Protection des routes Admin
+
+### 📍 Étape 3 : Base de données (Firebase)
+- [ ] Remplacer les données fictives par des données réelles (Firestore)
+- [ ] Upload d'images réelles (Firebase Storage)
+
+### 📍 Étape 4 : Intégration Complète
+- [ ] Liaison entre le Storefront et le Dashboard
+

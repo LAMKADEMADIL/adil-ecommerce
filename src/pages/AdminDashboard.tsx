@@ -12,6 +12,13 @@ const MOCK_ORDERS = [
   { id: '#1003', customer: 'سارة محمد', product: 'Portefeuille Classique', total: '150 DH', status: 'delivered', date: '2023-10-22' },
 ];
 
+// بيانات وهمية للعملاء
+const MOCK_CUSTOMERS = [
+  { id: '#C101', name: 'أحمد العلمي', email: 'ahmed@example.com', orders: 5, totalSpent: '2250 DH' },
+  { id: '#C102', name: 'ياسين بناني', email: 'yassine@example.com', orders: 2, totalSpent: '700 DH' },
+  { id: '#C103', name: 'سارة محمد', email: 'sara@example.com', orders: 1, totalSpent: '150 DH' },
+];
+
 export default function AdminDashboard() {
   const [isSidebarOpen, setSidebarOpen] = useState(false); // For mobile overlay
   const [isCollapsed, setIsCollapsed] = useState(false); // For desktop collapse
@@ -294,7 +301,49 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {activeTab !== 'overview' && activeTab !== 'products' && activeTab !== 'orders' && (
+          {activeTab === 'customers' && (
+            <div className="customers-section">
+              <div className="section-header" style={{ marginBottom: '20px' }}>
+                <h2 className="section-title">{isRTL ? 'إدارة العملاء' : 'Gestion des Clients'}</h2>
+              </div>
+
+              <div className="table-responsive table-card">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>{isRTL ? 'الاسم' : 'Nom'}</th>
+                      <th>{isRTL ? 'البريد الإلكتروني' : 'Email'}</th>
+                      <th>{isRTL ? 'عدد الطلبات' : 'Commandes'}</th>
+                      <th>{isRTL ? 'إجمالي الإنفاق' : 'Total dépensé'}</th>
+                      <th>{isRTL ? 'إجراءات' : 'Actions'}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {MOCK_CUSTOMERS.map((customer) => (
+                      <tr key={customer.id}>
+                        <td style={{ fontWeight: 500 }}>{customer.name}</td>
+                        <td>{customer.email}</td>
+                        <td>{customer.orders}</td>
+                        <td style={{ color: 'var(--primary-color)', fontWeight: 'bold' }}>{customer.totalSpent}</td>
+                        <td>
+                          <div style={{ display: 'flex', gap: '10px' }}>
+                            <button className="action-btn edit-btn" title={isRTL ? 'عرض التفاصيل' : 'Voir les détails'}>
+                              <Eye size={18} />
+                            </button>
+                            <button className="action-btn delete-btn" title={isRTL ? 'حذف' : 'Supprimer'}>
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab !== 'overview' && activeTab !== 'products' && activeTab !== 'orders' && activeTab !== 'customers' && (
             <div className="placeholder-section">
               <h2>{isRTL ? 'هذا القسم قيد التطوير' : 'Cette section est en cours de développement'}</h2>
               <p>{isRTL ? 'سيتم إضافة المحتوى قريباً.' : 'Le contenu sera ajouté bientôt.'}</p>
