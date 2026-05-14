@@ -27,9 +27,10 @@ Une plateforme e-commerce moderne (SPA) dédiée à la vente de portefeuilles et
 - [x] Page de connexion Admin (Login)
 - [ ] Protection des routes Admin (À faire avec Firebase)
 
-### 📍 Étape 3 : Base de données (Firebase) - [En cours]
-- [ ] Remplacer les données fictives par des données réelles (Firestore)
-- [ ] Upload d'images réelles (Firebase Storage)
+### 📍 Étape 3 : Base de données (Firebase) - [Terminé]
+- [x] Remplacer les données fictives par des données réelles pour les produits (Firestore)
+- [x] Upload d'images via encodage Base64 (Solution alternative au Storage)
+- [x] Opérations CRUD complètes (Ajouter, Modifier, Supprimer) sur les produits
 
 ### 📍 Étape 4 : Intégration Complète
 - [ ] Liaison entre le Storefront et le Dashboard
