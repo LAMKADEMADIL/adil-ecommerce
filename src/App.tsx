@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import StoreFront from './pages/StoreFront';
 import AdminDashboard from './pages/AdminDashboard';
 import './App.css';

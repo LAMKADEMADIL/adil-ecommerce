@@ -1,27 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Package, ShoppingBag, Users, Settings, LogOut, LayoutDashboard, Menu, X, ChevronRight, ChevronLeft, Plus, Edit, Trash2, Eye, Check, EyeOff } from 'lucide-react';
-import { translations } from '../translations';
 import type { Language } from '../translations';
-import { getImageUrl, MOCK_PRODUCTS as INITIAL_PRODUCTS } from './StoreFront';
+import { getImageUrl } from './StoreFront';
 import './AdminDashboard.css';
 import { db } from '../firebase';
 import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
 import { auth } from '../firebase';
 import { signInWithEmailAndPassword, updatePassword, EmailAuthProvider, reauthenticateWithCredential, verifyBeforeUpdateEmail } from 'firebase/auth';
 
-// بيانات وهمية للطلبات
-const MOCK_ORDERS = [
-  { id: '#1001', customer: 'أحمد العلمي', product: 'Pack Voyage & Sac à Dos Cuir', total: '450 DH', status: 'pending', date: '2023-10-25' },
-  { id: '#1002', customer: 'ياسين بناني', product: 'Sac à Main Élégant', total: '350 DH', status: 'shipped', date: '2023-10-24' },
-  { id: '#1003', customer: 'سارة محمد', product: 'Portefeuille Classique', total: '150 DH', status: 'delivered', date: '2023-10-22' },
-];
-
-// بيانات وهمية للعملاء
-const MOCK_CUSTOMERS = [
-  { id: '#C101', name: 'أحمد العلمي', email: 'ahmed@example.com', orders: 5, totalSpent: '2250 DH' },
-  { id: '#C102', name: 'ياسين بناني', email: 'yassine@example.com', orders: 2, totalSpent: '700 DH' },
-  { id: '#C103', name: 'سارة محمد', email: 'sara@example.com', orders: 1, totalSpent: '150 DH' },
-];
+// Les données factices ont été supprimées car elles ne sont plus utilisées.
 
 export default function AdminDashboard() {
   const [isSidebarOpen, setSidebarOpen] = useState(false); // For mobile overlay
@@ -295,7 +282,6 @@ export default function AdminDashboard() {
     }
   }, [storeSettings.email]);
 
-  const t = translations[lang];
   const isRTL = lang === 'ar';
 
   const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
