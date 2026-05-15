@@ -16,13 +16,19 @@ export const getImageUrl = (url: string) => {
 export default function StoreFront() {
   const [products, setProducts] = useState<any[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  const [activeCategory, setActiveCategory] = useState('Tous');
   const [lang, setLang] = useState<Language>('fr');
   const [searchTerm, setSearchTerm] = useState('');
   
   // سلة التسوق
   const [cart, setCart] = useState<any[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [activeImage, setActiveImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (selectedProduct) {
+      setActiveImage(selectedProduct.image);
+    }
+  }, [selectedProduct]);
 
   // منطق العداد التنازلي (Urgency Timer)
   const [timeLeft, setTimeLeft] = useState(900); // 15 دقيقة بالثواني
@@ -152,9 +158,7 @@ export default function StoreFront() {
   };
 
   const filteredProducts = products.filter(p => {
-    const matchesCategory = activeCategory === 'Tous' || p.category === activeCategory;
-    const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesCategory && matchesSearch;
+    return p.name.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
   return (
@@ -250,9 +254,9 @@ export default function StoreFront() {
                   <button 
                     className={`btn-order ${!product.inStock ? 'disabled' : ''}`}
                     disabled={!product.inStock}
-                    onClick={() => addToCart(product)}
+                    onClick={() => setSelectedProduct(product)}
                   >
-                    {product.inStock ? (isRTL ? 'إضافة للسلة' : 'Ajouter au panier') : t.indisponible}
+                    {product.inStock ? (isRTL ? 'اطلب الآن' : 'Commander') : t.indisponible}
                   </button>
                 </div>
               </div>
@@ -268,7 +272,34 @@ export default function StoreFront() {
             <button className="close-modal" onClick={() => setSelectedProduct(null)}>&times;</button>
             <div className="modal-body">
               <div className="modal-image-wrapper">
-                <img src={selectedProduct.image && selectedProduct.image.startsWith('data:image/') ? selectedProduct.image : getImageUrl(selectedProduct.image)} alt={selectedProduct.name} />
+                <div className="main-image-container">
+                  <img 
+                    src={activeImage && activeImage.startsWith('data:image/') ? activeImage : getImageUrl(activeImage || selectedProduct.image)} 
+                    alt={selectedProduct.name} 
+                    key={activeImage} // Force re-animation on change
+                  />
+                </div>
+                {/* معرض الصور المصغرة */}
+                <div className="thumbnail-gallery">
+                  {/* حالياً نعرض الصورة الأساسية وصور إضافية إذا وجدت في الداتا */}
+                  {[selectedProduct.image, selectedProduct.image2, selectedProduct.image3].filter(Boolean).map((img, idx) => (
+                    <div 
+                      key={idx} 
+                      className={`thumbnail ${activeImage === img ? 'active' : ''}`}
+                      onClick={() => setActiveImage(img)}
+                    >
+                      <img src={img && img.startsWith('data:image/') ? img : getImageUrl(img)} alt={`Thumb ${idx}`} />
+                    </div>
+                  ))}
+                  {/* محاكاة صور إضافية لأغراض العرض إذا لم تكن موجودة */}
+                  {!selectedProduct.image2 && (
+                    <>
+                      <div className="thumbnail" style={{opacity: 0.5, border: '1px dashed #ccc'}}>
+                         <img src={getImageUrl(selectedProduct.image)} alt="demo" style={{filter: 'grayscale(1)'}} />
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
               <div className="modal-details">
                 <div className="urgency-timer">
