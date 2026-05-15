@@ -5,6 +5,13 @@
   min-height: 100vh;
 }
 
+.container {
+  width: 95%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 15px;
+}
+
 /* تصميم الرأس Header */
 .header {
   background-color: #ffffff;
@@ -75,9 +82,10 @@
 }
 
 .hero h2 {
-  font-size: 2rem;
-  margin-bottom: 10px;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  margin-bottom: 15px;
   color: var(--text-main);
+  line-height: 1.2;
 }
 
 .hero p {
@@ -100,8 +108,14 @@
   gap: 30px;
 }
 
-/* لضمان ظهور 3 منتجات في الصف الواحد على الشاشات الكبيرة */
-@media (min-width: 992px) {
+/* لضمان ظهور 4 منتجات في الصف الواحد على الشاشات الكبيرة */
+@media (min-width: 1200px) {
+  .products-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 992px) and (max-width: 1199px) {
   .products-grid {
     grid-template-columns: repeat(3, 1fr);
   }

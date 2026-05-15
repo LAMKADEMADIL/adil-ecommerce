@@ -227,18 +227,6 @@ export default function StoreFront() {
         <section className="products-section">
           <h3 className="section-title">{t.collection}</h3>
           
-          <div className="category-filters">
-            {['Tous', 'Sacs', 'Sacs à dos', 'Portefeuilles', 'Voyage'].map(cat => (
-              <button 
-                key={cat} 
-                className={`filter-btn ${activeCategory === cat ? 'active' : ''}`}
-                onClick={() => setActiveCategory(cat)}
-              >
-                {t.cats[cat as keyof typeof t.cats]}
-              </button>
-            ))}
-          </div>
-
           <div className="products-grid">
             {filteredProducts.map((product) => (
               <div key={product.id} className="product-card">
