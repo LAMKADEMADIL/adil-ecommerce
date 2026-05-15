@@ -281,8 +281,8 @@ export default function StoreFront() {
                 </div>
                 {/* معرض الصور المصغرة */}
                 <div className="thumbnail-gallery">
-                  {/* حالياً نعرض الصورة الأساسية وصور إضافية إذا وجدت في الداتا */}
-                  {[selectedProduct.image, selectedProduct.image2, selectedProduct.image3].filter(Boolean).map((img, idx) => (
+                  {/* عرض الصور الخمسة كاملة في المعرض */}
+                  {[selectedProduct.image, selectedProduct.image2, selectedProduct.image3, selectedProduct.image4, selectedProduct.image5].filter(Boolean).map((img, idx) => (
                     <div 
                       key={idx} 
                       className={`thumbnail ${activeImage === img ? 'active' : ''}`}
@@ -291,14 +291,6 @@ export default function StoreFront() {
                       <img src={img && img.startsWith('data:image/') ? img : getImageUrl(img)} alt={`Thumb ${idx}`} />
                     </div>
                   ))}
-                  {/* محاكاة صور إضافية لأغراض العرض إذا لم تكن موجودة */}
-                  {!selectedProduct.image2 && (
-                    <>
-                      <div className="thumbnail" style={{opacity: 0.5, border: '1px dashed #ccc'}}>
-                         <img src={getImageUrl(selectedProduct.image)} alt="demo" style={{filter: 'grayscale(1)'}} />
-                      </div>
-                    </>
-                  )}
                 </div>
               </div>
               <div className="modal-details">

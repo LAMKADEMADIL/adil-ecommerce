@@ -27,6 +27,10 @@ export default function AdminDashboard() {
     price: '',
     category: 'Sacs',
     image: '',
+    image2: '',
+    image3: '',
+    image4: '',
+    image5: '',
     inStock: true
   });
 
@@ -208,12 +212,12 @@ export default function AdminDashboard() {
     return acc;
   }, []);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: string = 'image') => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setNewProduct({ ...newProduct, image: reader.result as string });
+        setNewProduct({ ...newProduct, [fieldName]: reader.result as string });
       };
       reader.readAsDataURL(file);
     }
@@ -225,6 +229,10 @@ export default function AdminDashboard() {
       price: product.price,
       category: product.category,
       image: product.image,
+      image2: product.image2 || '',
+      image3: product.image3 || '',
+      image4: product.image4 || '',
+      image5: product.image5 || '',
       inStock: product.inStock
     });
     setEditingProductId(product.id);
@@ -261,6 +269,10 @@ export default function AdminDashboard() {
         price: '',
         category: 'Sacs',
         image: '',
+        image2: '',
+        image3: '',
+        image4: '',
+        image5: '',
         inStock: true
       });
       // Refetch products
@@ -733,11 +745,11 @@ export default function AdminDashboard() {
 
       {/* Product Modal Placeholder */}
       {isProductModalOpen && (
-        <div className="sidebar-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }} onClick={() => { setProductModalOpen(false); setIsEditing(false); setNewProduct({ name: '', price: '', category: 'Sacs', image: '', inStock: true }); }}>
+        <div className="sidebar-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }} onClick={() => { setProductModalOpen(false); setIsEditing(false); setNewProduct({ name: '', price: '', category: 'Sacs', image: '', image2: '', image3: '', image4: '', image5: '', inStock: true }); }}>
           <div className="modal-content" style={{ backgroundColor: '#fff', padding: '30px', borderRadius: '12px', width: '90%', maxWidth: '500px' }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <h2 style={{ margin: 0 }}>{isEditing ? (isRTL ? 'تعديل المنتج' : 'Modifier le produit') : (isRTL ? 'إضافة منتج جديد' : 'Ajouter un nouveau produit')}</h2>
-              <button onClick={() => { setProductModalOpen(false); setIsEditing(false); setNewProduct({ name: '', price: '', category: 'Sacs', image: '', inStock: true }); }} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={24} /></button>
+              <button onClick={() => { setProductModalOpen(false); setIsEditing(false); setNewProduct({ name: '', price: '', category: 'Sacs', image: '', image2: '', image3: '', image4: '', image5: '', inStock: true }); }} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={24} /></button>
             </div>
             <form className="modal-form" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }} onSubmit={(e) => e.preventDefault()}>
               <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
@@ -779,13 +791,42 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
+              <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                <label style={{ fontWeight: 500 }}>{isRTL ? 'صور إضافية (اختياري)' : 'Images supplémentaires (Optionnel)'}</label>
+                <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '10px' }}>
+                  {[2, 3, 4, 5].map(num => (
+                    <div key={num} style={{ 
+                      minWidth: '80px', height: '80px', 
+                      border: '2px dashed #cbd5e1', borderRadius: '8px', 
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      cursor: 'pointer', position: 'relative', overflow: 'hidden'
+                    }}>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        style={{ display: 'none' }} 
+                        id={`upload-img-${num}`} 
+                        onChange={(e) => handleImageChange(e, `image${num}`)} 
+                      />
+                      <label htmlFor={`upload-img-${num}`} style={{ cursor: 'pointer', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {(newProduct as any)[`image${num}`] ? (
+                          <img src={(newProduct as any)[`image${num}`]} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={`Extra ${num}`} />
+                        ) : (
+                          <Plus size={20} style={{ color: '#64748b' }} />
+                        )}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <input type="checkbox" id="inStock" checked={newProduct.inStock} onChange={(e) => setNewProduct({...newProduct, inStock: e.target.checked})} style={{ width: '18px', height: '18px' }} />
                 <label htmlFor="inStock" style={{ fontWeight: 500 }}>{isRTL ? 'متوفر في المخزون' : 'En stock'}</label>
               </div>
             </form>
             <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-              <button onClick={() => { setProductModalOpen(false); setIsEditing(false); setNewProduct({ name: '', price: '', category: 'Sacs', image: '', inStock: true }); }} style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff', cursor: 'pointer' }}>
+              <button onClick={() => { setProductModalOpen(false); setIsEditing(false); setNewProduct({ name: '', price: '', category: 'Sacs', image: '', image2: '', image3: '', image4: '', image5: '', inStock: true }); }} style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff', cursor: 'pointer' }}>
                 {isRTL ? 'إلغاء' : 'Annuler'}
               </button>
               <button onClick={handleSaveProduct} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: 'var(--primary-color)', color: '#fff', cursor: 'pointer' }}>
