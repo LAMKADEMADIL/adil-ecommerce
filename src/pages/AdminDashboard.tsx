@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Package, ShoppingBag, Users, Settings, LogOut, LayoutDashboard, Menu, X, ChevronRight, ChevronLeft, Plus, Edit, Trash2, Eye, Check } from 'lucide-react';
+import { Package, ShoppingBag, Users, Settings, LogOut, LayoutDashboard, Menu, X, ChevronRight, ChevronLeft, Plus, Edit, Trash2, Eye, Check, EyeOff } from 'lucide-react';
 import { translations } from '../translations';
 import type { Language } from '../translations';
 import { getImageUrl, MOCK_PRODUCTS as INITIAL_PRODUCTS } from './StoreFront';
 import './AdminDashboard.css';
 import { db } from '../firebase';
 import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
+import { auth } from '../firebase';
+import { signInWithEmailAndPassword, updatePassword, EmailAuthProvider, reauthenticateWithCredential, verifyBeforeUpdateEmail } from 'firebase/auth';
 
 // بيانات وهمية للطلبات
 const MOCK_ORDERS = [
@@ -88,6 +90,13 @@ export default function AdminDashboard() {
     currency: 'DH'
   });
 
+  const [newPassword, setNewPassword] = useState('');
+  const [oldPassword, setOldPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const fetchSettings = async () => {
     try {
       const docRef = doc(db, "settings", "store");
@@ -100,22 +109,86 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleSaveSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await setDoc(doc(db, "settings", "store"), storeSettings);
+      
+      const user = auth.currentUser;
+      
+      // تحديث بيانات المستخدم في مجموعة users
+      if (user) {
+        const userDocRef = doc(db, "users", user.uid);
+        const updateData: any = {
+          "Nom de la boutique": storeSettings.storeName,
+          "Numéro WhatsApp": storeSettings.whatsapp,
+          "email": storeSettings.email,
+        };
+        
+        // تحديث كلمة المرور في قاعدة البيانات فقط إذا تم كتابة كلمة مرور جديدة
+        if (newPassword) {
+          updateData["mot de passe"] = newPassword;
+        }
+        
+        await setDoc(userDocRef, updateData, { merge: true });
+      }
+      const emailChanged = user && user.email !== storeSettings.email;
+      
+      if (emailChanged || newPassword) {
+        if (!oldPassword) {
+          alert(isRTL ? 'الرجاء إدخال كلمة المرور الحالية لتأكيد التغييرات الحساسة!' : 'Veuillez entrer le mot de passe actuel pour confirmer les changements sensibles !');
+          return;
+        }
+        
+        if (newPassword && newPassword !== confirmPassword) {
+          alert(isRTL ? 'كلمات المرور غير متطابقة!' : 'Les mots de passe ne correspondent pas !');
+          return;
+        }
+        
+        if (user) {
+          // Re-authenticate user
+          const credential = EmailAuthProvider.credential(user.email!, oldPassword);
+          await reauthenticateWithCredential(user, credential);
+          
+          // Update email if changed
+          if (emailChanged) {
+            await verifyBeforeUpdateEmail(user, storeSettings.email);
+            alert(isRTL ? 'تم إرسال رابط تفعيل للايميل الجديد! يرجى فتح علبة الوارد للايميل الجديد والضغط على الرابط لإتمام التغيير.' : 'Un lien de vérification a été envoyé au nouvel e-mail ! Veuillez l\'ouvrir pour confirmer.');
+          }
+          
+          // Update password if filled
+          if (newPassword) {
+            await updatePassword(user, newPassword);
+          }
+          
+          alert(isRTL ? 'تم تحديث البيانات بنجاح!' : 'Données mises à jour avec succès !');
+        } else {
+          alert(isRTL ? 'يجب إعادة تسجيل الدخول!' : 'Veuillez vous reconnecter.');
+        }
+      } else {
+        alert(isRTL ? 'تم حفظ الإعدادات بنجاح!' : 'Paramètres enregistrés avec succès!');
+      }
+      
+      setNewPassword('');
+      setOldPassword('');
+      setConfirmPassword('');
+    } catch (e: any) {
+      console.error("Error saving settings: ", e);
+      if (e.code === 'auth/wrong-password') {
+        alert(isRTL ? 'كلمة المرور الحالية خاطئة!' : 'Le mot de passe actuel est incorrect !');
+      } else if (e.code === 'auth/requires-recent-login') {
+        alert(isRTL ? 'الرجاء تسجيل الدخول مجدداً لتغيير البيانات (لدواعي أمنية).' : 'Veuillez vous reconnecter pour changer les données (sécurité).');
+      } else {
+        alert(`Error saving settings: ${e.message || e.code || e}`);
+      }
+    }
+  };
+
   useEffect(() => {
     fetchProducts();
     fetchOrders();
     fetchSettings();
   }, []);
-
-  const handleSaveSettings = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await setDoc(doc(db, "settings", "store"), storeSettings);
-      alert(isRTL ? 'تم حفظ الإعدادات بنجاح!' : 'Paramètres enregistrés avec succès!');
-    } catch (e) {
-      console.error("Error saving settings: ", e);
-      alert("Error saving settings.");
-    }
-  };
 
   const totalSales = orders.reduce((sum, order) => {
     const totalStr = order.total ? String(order.total) : '';
@@ -213,7 +286,14 @@ export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [loginError, setLoginError] = useState('');
+
+  useEffect(() => {
+    if (storeSettings.email) {
+      setEmail(storeSettings.email);
+    }
+  }, [storeSettings.email]);
 
   const t = translations[lang];
   const isRTL = lang === 'ar';
@@ -240,12 +320,14 @@ export default function AdminDashboard() {
             <p style={{ color: '#64748b', marginTop: '5px' }}>{isRTL ? 'أدخل بياناتك للمتابعة' : 'Entrez vos identifiants pour continuer'}</p>
           </div>
           
-          <form style={{ display: 'flex', flexDirection: 'column', gap: '20px' }} onSubmit={(e) => {
+          <form style={{ display: 'flex', flexDirection: 'column', gap: '20px' }} onSubmit={async (e) => {
             e.preventDefault();
-            if (email === 'admin@adil.com' && password === 'admin123') {
+            try {
+              await signInWithEmailAndPassword(auth, email, password);
               setIsAuthenticated(true);
-            } else {
-              setLoginError(isRTL ? 'بيانات غير صحيحة!' : 'Identifiants incorrects!');
+            } catch (error) {
+              console.error("Login error: ", error);
+              setLoginError(isRTL ? 'بيانات الدخول غير صحيحة!' : 'Identifiants incorrects!');
             }
           }}>
             <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
@@ -255,7 +337,12 @@ export default function AdminDashboard() {
             
             <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
               <label style={{ fontWeight: 500 }}>{isRTL ? 'كلمة المرور' : 'Mot de passe'}</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }} required />
+              <div style={{ position: 'relative' }}>
+                <input type={showLoginPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" style={{ padding: '12px', paddingRight: '40px', borderRadius: '8px', border: '1px solid #e2e8f0', width: '100%' }} required />
+                <button type="button" onClick={() => setShowLoginPassword(!showLoginPassword)} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}>
+                  {showLoginPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
             
             {loginError && <p style={{ color: '#ef4444', fontSize: '0.9rem', textAlign: 'center' }}>{loginError}</p>}
@@ -278,7 +365,7 @@ export default function AdminDashboard() {
         <div className="sidebar-header">
           <div className="logo-section" style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
             <img src={getImageUrl("/image.png")} alt="Adil Logo" className="sidebar-logo-img" />
-            {!isCollapsed && <h2 className="sidebar-logo-text">Adil E-commerce</h2>}
+            {!isCollapsed && <h2 className="sidebar-logo-text">{storeSettings.storeName}</h2>}
           </div>
           <button className="close-sidebar" onClick={toggleSidebar}>
             <X size={24} />
@@ -331,8 +418,8 @@ export default function AdminDashboard() {
             </button>
             
             <div className="admin-profile">
-              <span>{isRTL ? 'مرحباً، عادل' : 'Bonjour, Adil'}</span>
-              <div className="avatar">A</div>
+              <span>{isRTL ? `مرحباً، ${storeSettings.storeName}` : `Bonjour, ${storeSettings.storeName}`}</span>
+              <div className="avatar">{storeSettings.storeName.charAt(0).toUpperCase()}</div>
             </div>
           </div>
           
@@ -573,39 +660,77 @@ export default function AdminDashboard() {
 
           {activeTab === 'settings' && (
             <div className="settings-section">
-              <div className="section-header" style={{ marginBottom: '20px' }}>
+              <div className="section-header" style={{ marginBottom: '20px', textAlign: 'center' }}>
                 <h2 className="section-title">{isRTL ? 'الإعدادات العامة' : 'Paramètres Généraux'}</h2>
               </div>
 
-              <div className="table-card" style={{ maxWidth: '600px' }}>
+              <div className="table-card" style={{ maxWidth: '800px', margin: '0 auto' }}>
                 <form className="modal-form" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }} onSubmit={handleSaveSettings}>
-                  <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                    <label style={{ fontWeight: 500 }}>{isRTL ? 'اسم المتجر' : 'Nom de la boutique'}</label>
-                    <input type="text" value={storeSettings.storeName} onChange={(e) => setStoreSettings({...storeSettings, storeName: e.target.value})} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }} required />
+                  <div style={{ display: 'flex', gap: '20px' }}>
+                    <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1 }}>
+                      <label style={{ fontWeight: 500 }}>{isRTL ? 'اسم المتجر' : 'Nom'}</label>
+                      <input type="text" value={storeSettings.storeName} onChange={(e) => setStoreSettings({...storeSettings, storeName: e.target.value})} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }} required />
+                    </div>
+
+                    <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1 }}>
+                      <label style={{ fontWeight: 500 }}>{isRTL ? 'رقم الواتساب' : 'Numéro WhatsApp'}</label>
+                      <input type="text" value={storeSettings.whatsapp} onChange={(e) => setStoreSettings({...storeSettings, whatsapp: e.target.value})} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }} required />
+                    </div>
                   </div>
 
-                  <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                    <label style={{ fontWeight: 500 }}>{isRTL ? 'رقم الواتساب' : 'Numéro WhatsApp'}</label>
-                    <input type="text" value={storeSettings.whatsapp} onChange={(e) => setStoreSettings({...storeSettings, whatsapp: e.target.value})} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }} required />
+                  <div style={{ display: 'flex', gap: '20px' }}>
+                    <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1 }}>
+                      <label style={{ fontWeight: 500 }}>{isRTL ? 'البريد الإلكتروني' : 'Email'}</label>
+                      <input type="email" value={storeSettings.email} onChange={(e) => setStoreSettings({...storeSettings, email: e.target.value})} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }} required />
+                    </div>
+
+                    <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1 }}>
+                      <label style={{ fontWeight: 500 }}>{isRTL ? 'العملة' : 'Devise'}</label>
+                      <select value={storeSettings.currency} onChange={(e) => setStoreSettings({...storeSettings, currency: e.target.value})} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                        <option value="DH">DH (Dirham Marocain)</option>
+                        <option value="$">$ (Dollar)</option>
+                        <option value="€">€ (Euro)</option>
+                      </select>
+                    </div>
                   </div>
 
-                  <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                    <label style={{ fontWeight: 500 }}>{isRTL ? 'البريد الإلكتروني' : 'Email de contact'}</label>
-                    <input type="email" value={storeSettings.email} onChange={(e) => setStoreSettings({...storeSettings, email: e.target.value})} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }} required />
+                  <div style={{ display: 'flex', gap: '20px' }}>
+                    <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1 }}>
+                      <label style={{ fontWeight: 500 }}>{isRTL ? 'كلمة المرور' : 'Mot de passe'}</label>
+                      <div style={{ position: 'relative' }}>
+                        <input type={showOldPassword ? "text" : "password"} value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} style={{ padding: '10px', paddingRight: '40px', borderRadius: '8px', border: '1px solid #e2e8f0', width: '100%' }} placeholder="••••••••" />
+                        <button type="button" onClick={() => setShowOldPassword(!showOldPassword)} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}>
+                          {showOldPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1 }}>
+                      <label style={{ fontWeight: 500 }}>{isRTL ? 'كلمة مرور جديدة' : 'Nouveau mot de passe'}</label>
+                      <div style={{ position: 'relative' }}>
+                        <input type={showNewPassword ? "text" : "password"} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} style={{ padding: '10px', paddingRight: '40px', borderRadius: '8px', border: '1px solid #e2e8f0', width: '100%' }} placeholder="••••••••" />
+                        <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}>
+                          {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                    <label style={{ fontWeight: 500 }}>{isRTL ? 'العملة' : 'Devise'}</label>
-                    <select value={storeSettings.currency} onChange={(e) => setStoreSettings({...storeSettings, currency: e.target.value})} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                      <option value="DH">DH (Dirham Marocain)</option>
-                      <option value="$">$ (Dollar)</option>
-                      <option value="€">€ (Euro)</option>
-                    </select>
-                  </div>
-
-                  <button type="submit" className="btn-primary" style={{ alignSelf: 'flex-start', padding: '10px 20px', backgroundColor: 'var(--primary-color)', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
-                    {isRTL ? 'حفظ التغييرات' : 'Enregistrer les modifications'}
-                  </button>
+                  {newPassword.length > 0 && (
+                    <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                      <label style={{ fontWeight: 500 }}>{isRTL ? 'تأكيد كلمة المرور' : 'Confirmer le mot de passe'}</label>
+                      <div style={{ position: 'relative' }}>
+                        <input type={showConfirmPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} style={{ padding: '10px', paddingRight: '40px', borderRadius: '8px', border: '1px solid #e2e8f0', width: '100%' }} placeholder="••••••••" />
+                        <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}>
+                          {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+ 
+                   <button type="submit" className="btn-primary" style={{ alignSelf: 'center', padding: '10px 20px', backgroundColor: 'var(--primary-color)', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+                     {isRTL ? 'حفظ التغييرات' : 'Enregistrer les modifications'}
+                   </button>
                 </form>
               </div>
             </div>
