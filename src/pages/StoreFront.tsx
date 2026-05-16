@@ -1,17 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Bike, Briefcase, Banknote, MessageCircle, Phone, Mail, Search, ShoppingCart, X, Plus, Minus, Trash2, Clock, ShieldCheck, Truck, RotateCcw, Flame } from 'lucide-react';
+import { Bike, Briefcase, Banknote, MessageCircle, Phone, Mail, Search, ShoppingCart, X, Plus, Minus, Trash2, Clock, ShieldCheck, Truck, RotateCcw, Flame, User as UserIcon, LogOut } from 'lucide-react';
 import { translations } from '../translations';
 import type { Language } from '../translations';
 import '../App.css';
 import { db } from '../firebase';
-import { collection, getDocs, addDoc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, doc, setDoc, getDoc } from 'firebase/firestore';
+import { auth } from '../firebase';
+import { onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import type { User } from 'firebase/auth';
 
-// دالة مساعدة لإصلاح مسار الصور في GitHub Pages
-export const getImageUrl = (url: string) => {
-  if (url.startsWith('http')) return url;
-  const base = import.meta.env.BASE_URL || '/';
-  return url.startsWith('/') ? `${base}${url.slice(1)}` : `${base}${url}`;
-};
+import { getImageUrl } from '../utils';
 
 export default function StoreFront() {
   const [products, setProducts] = useState<any[]>([]);
@@ -23,6 +21,19 @@ export default function StoreFront() {
   const [cart, setCart] = useState<any[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [activeImage, setActiveImage] = useState<string | null>(null);
+
+  // Authentication State
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const [userData, setUserData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
+  const [authError, setAuthError] = useState('');
 
   useEffect(() => {
     if (selectedProduct) {
@@ -69,7 +80,6 @@ export default function StoreFront() {
 
     const fetchSettings = async () => {
       try {
-        const { doc, getDoc } = await import('firebase/firestore');
         const docRef = doc(db, "settings", "store");
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
@@ -91,6 +101,14 @@ export default function StoreFront() {
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(cart));
   }, [cart]);
+
+  // Auth State Listener
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const t = translations[lang];
   const isRTL = lang === 'ar';
@@ -121,17 +139,57 @@ export default function StoreFront() {
   };
 
   const cartTotal = cart.reduce((sum, item) => {
-    const price = parseInt(item.price.replace(/[^0-9]/g, ''));
+    const priceStr = String(item.price);
+    const price = parseInt(priceStr.replace(/[^0-9]/g, ''));
     return sum + (price * item.quantity);
   }, 0);
 
+  const handleAuthSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError('');
+    try {
+      if (authMode === 'signup') {
+        if (userData.password !== userData.confirmPassword) {
+          setAuthError(isRTL ? 'كلمات المرور غير متطابقة' : 'Passwords do not match');
+          return;
+        }
+        const userCredential = await createUserWithEmailAndPassword(auth, userData.email, userData.password);
+        await setDoc(doc(db, "customers", userCredential.user.uid), {
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          email: userData.email,
+          createdAt: new Date().toISOString()
+        });
+        setCustomerName(`${userData.firstName} ${userData.lastName}`);
+      } else {
+        const userCredential = await signInWithEmailAndPassword(auth, userData.email, userData.password);
+        const userDoc = await getDoc(doc(db, "customers", userCredential.user.uid));
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          setCustomerName(`${data.firstName} ${data.lastName}`);
+        }
+      }
+      setIsAuthModalOpen(false);
+      setUserData({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '' });
+    } catch (error: any) {
+      console.error("Auth error: ", error);
+      setAuthError(isRTL ? 'خطأ في الدخول. يرجى التأكد من البيانات.' : 'Error. Please check your credentials.');
+    }
+  };
+
   const handleOrderSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!currentUser) {
+      setIsAuthModalOpen(true);
+      return;
+    }
     try {
       const orderItems = isCartOpen ? cart : [selectedProduct];
-      const totalAmount = isCartOpen ? cartTotal : parseInt(selectedProduct.price.replace(/[^0-9]/g, ''));
+      const selectedPriceStr = selectedProduct ? String(selectedProduct.price) : '0';
+      const totalAmount = isCartOpen ? cartTotal : parseInt(selectedPriceStr.replace(/[^0-9]/g, ''));
 
       await addDoc(collection(db, "orders"), {
+        userId: currentUser.uid,
         customer: customerName,
         phone: customerPhone,
         city: customerCity,
@@ -148,7 +206,6 @@ export default function StoreFront() {
       } else {
         setSelectedProduct(null);
       }
-      setCustomerName('');
       setCustomerPhone('');
       setCustomerCity('');
     } catch (e) {
@@ -187,6 +244,23 @@ export default function StoreFront() {
               <ShoppingCart size={24} />
               {cart.length > 0 && <span className="cart-badge">{cart.length}</span>}
             </button>
+
+            <div className="user-profile">
+              {currentUser ? (
+                <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                  <div className="user-avatar" title={currentUser.email || ''}>
+                    <UserIcon size={20} />
+                  </div>
+                  <button onClick={() => signOut(auth)} className="logout-btn" title={isRTL ? 'خروج' : 'Déconnexion'}>
+                    <LogOut size={18} />
+                  </button>
+                </div>
+              ) : (
+                <button className="login-trigger-btn" onClick={() => setIsAuthModalOpen(true)}>
+                  <UserIcon size={24} />
+                </button>
+              )}
+            </div>
 
             <div className="lang-switcher">
               <select 
@@ -274,7 +348,7 @@ export default function StoreFront() {
               <div className="modal-image-wrapper">
                 <div className="main-image-container">
                   <img 
-                    src={activeImage && activeImage.startsWith('data:image/') ? activeImage : getImageUrl(activeImage || selectedProduct.image)} 
+                    src={activeImage && String(activeImage).startsWith('data:image/') ? activeImage : getImageUrl(activeImage || selectedProduct.image)} 
                     alt={selectedProduct.name} 
                     key={activeImage} // Force re-animation on change
                   />
@@ -412,6 +486,63 @@ export default function StoreFront() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+      {/* Auth Modal (Login/Signup) */}
+      {isAuthModalOpen && (
+        <div className="sidebar-overlay" style={{zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center'}} onClick={() => setIsAuthModalOpen(false)}>
+          <div className="modal-content auth-modal" style={{maxWidth: '400px', width: '90%'}} onClick={e => e.stopPropagation()}>
+            <div className="auth-header" style={{display: 'flex', justifyContent: 'space-between', marginBottom: '20px'}}>
+              <h3>{authMode === 'login' ? (isRTL ? 'تسجيل الدخول' : 'Connexion') : (isRTL ? 'إنشاء حساب جديد' : 'Créer un compte')}</h3>
+              <button onClick={() => setIsAuthModalOpen(false)} style={{background: 'none', border: 'none', cursor: 'pointer'}}><X size={24} /></button>
+            </div>
+            
+            <form onSubmit={handleAuthSubmit} style={{display: 'flex', flexDirection: 'column', gap: '15px'}}>
+              {authMode === 'signup' && (
+                <>
+                  <div className="form-group" style={{display: 'flex', gap: '10px'}}>
+                    <input type="text" placeholder={isRTL ? 'الاسم' : 'Prénom'} value={userData.firstName} onChange={e => setUserData({...userData, firstName: e.target.value})} required style={{flex: 1}} />
+                    <input type="text" placeholder={isRTL ? 'النسب' : 'Nom'} value={userData.lastName} onChange={e => setUserData({...userData, lastName: e.target.value})} required style={{flex: 1}} />
+                  </div>
+                </>
+              )}
+              <div className="form-group">
+                <input type="email" placeholder={isRTL ? 'البريد الإلكتروني' : 'Email'} value={userData.email} onChange={e => setUserData({...userData, email: e.target.value})} required />
+              </div>
+              <div className="form-group">
+                <input type="password" placeholder={isRTL ? 'كلمة المرور' : 'Mot de passe'} value={userData.password} onChange={e => setUserData({...userData, password: e.target.value})} required />
+              </div>
+              {authMode === 'signup' && (
+                <div className="form-group">
+                  <input type="password" placeholder={isRTL ? 'تأكيد كلمة المرور' : 'Confirmer'} value={userData.confirmPassword} onChange={e => setUserData({...userData, confirmPassword: e.target.value})} required />
+                </div>
+              )}
+              
+              {authError && <p style={{color: '#ef4444', fontSize: '0.85rem'}}>{authError}</p>}
+              
+              <button type="submit" className="btn-primary" style={{backgroundColor: 'var(--primary-color)', color: 'white', padding: '12px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold'}}>
+                {authMode === 'login' ? (isRTL ? 'دخول' : 'Se connecter') : (isRTL ? 'إنشاء الحساب' : 'S\'inscrire')}
+              </button>
+            </form>
+            
+            <div style={{marginTop: '20px', textAlign: 'center', fontSize: '0.9rem'}}>
+              {authMode === 'login' ? (
+                <p>
+                  {isRTL ? 'ليس لديك حساب؟' : 'Pas de compte ?'}{' '}
+                  <button onClick={() => setAuthMode('signup')} style={{color: 'var(--primary-color)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'bold'}}>
+                    {isRTL ? 'سجل الآن' : 'Inscrivez-vous'}
+                  </button>
+                </p>
+              ) : (
+                <p>
+                  {isRTL ? 'لديك حساب بالفعل؟' : 'Déjà un compte ?'}{' '}
+                  <button onClick={() => setAuthMode('login')} style={{color: 'var(--primary-color)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'bold'}}>
+                    {isRTL ? 'سجل دخولك' : 'Connectez-vous'}
+                  </button>
+                </p>
+              )}
+            </div>
           </div>
         </div>
       )}

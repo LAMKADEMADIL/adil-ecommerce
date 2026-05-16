@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Package, ShoppingBag, Users, Settings, LogOut, LayoutDashboard, Menu, X, ChevronRight, ChevronLeft, Plus, Edit, Trash2, Eye, Check, EyeOff } from 'lucide-react';
 import type { Language } from '../translations';
-import { getImageUrl } from './StoreFront';
+import { getImageUrl } from '../utils';
 import './AdminDashboard.css';
 import { db } from '../firebase';
 import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
