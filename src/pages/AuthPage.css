@@ -6,7 +6,10 @@
   justify-content: center;
   padding: 20px;
   font-family: 'Inter', sans-serif;
-  direction: rtl;
+}
+
+.auth-page-wrapper * {
+  box-sizing: border-box;
 }
 
 .auth-container {
@@ -60,8 +63,9 @@
 
 .name-fields {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 15px;
+  width: 100%;
 }
 
 .input-group {

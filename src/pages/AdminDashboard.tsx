@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Package, ShoppingBag, Users, Settings, LogOut, LayoutDashboard, Menu, X, ChevronRight, ChevronLeft, Plus, Edit, Trash2, Eye, Check, EyeOff } from 'lucide-react';
 import type { Language } from '../translations';
 import { getImageUrl } from '../utils';
@@ -11,6 +12,7 @@ import { signInWithEmailAndPassword, updatePassword, EmailAuthProvider, reauthen
 // Les données factices ont été supprimées car elles ne sont plus utilisées.
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
   const [isSidebarOpen, setSidebarOpen] = useState(false); // For mobile overlay
   const [isCollapsed, setIsCollapsed] = useState(false); // For desktop collapse
   const [activeTab, setActiveTab] = useState('products'); // Set to products by default for testing
@@ -283,14 +285,25 @@ export default function AdminDashboard() {
   };
   
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showLoginPassword, setShowLoginPassword] = useState(false);
-  const [loginError, setLoginError] = useState('');
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user && user.email === 'adillamkadem@gmail.com') {
+        setIsAuthenticated(true);
+      } else {
+        setIsAuthenticated(false);
+        // توجيه أي شخص آخر لصفحة تسجيل الدخول
+        if (!isLoadingAuth) navigate('/login');
+      }
+      setIsLoadingAuth(false);
+    });
+    return () => unsubscribe();
+  }, [navigate]);
 
   useEffect(() => {
     if (storeSettings.email) {
-      setEmail(storeSettings.email);
+      // setEmail(storeSettings.email); // No longer needed
     }
   }, [storeSettings.email]);
 
@@ -306,54 +319,12 @@ export default function AdminDashboard() {
 
 
 
+  if (isLoadingAuth) {
+    return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>جاري التحميل...</div>;
+  }
+
   if (!isAuthenticated) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f8fafc' }}>
-        <div style={{ backgroundColor: '#fff', padding: '40px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', width: '100%', maxWidth: '400px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-            <div style={{ width: '60px', height: '60px', backgroundColor: 'var(--primary-color)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 15px' }}>
-              <Users size={30} style={{ color: '#fff' }} />
-            </div>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1e293b' }}>{isRTL ? 'تسجيل الدخول للإدارة' : 'Connexion Admin'}</h1>
-            <p style={{ color: '#64748b', marginTop: '5px' }}>{isRTL ? 'أدخل بياناتك للمتابعة' : 'Entrez vos identifiants pour continuer'}</p>
-          </div>
-          
-          <form style={{ display: 'flex', flexDirection: 'column', gap: '20px' }} onSubmit={async (e) => {
-            e.preventDefault();
-            try {
-              await signInWithEmailAndPassword(auth, email, password);
-              setIsAuthenticated(true);
-            } catch (error) {
-              console.error("Login error: ", error);
-              setLoginError(isRTL ? 'بيانات الدخول غير صحيحة!' : 'Identifiants incorrects!');
-            }
-          }}>
-            <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-              <label style={{ fontWeight: 500 }}>{isRTL ? 'البريد الإلكتروني' : 'Email'}</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@adil.com" style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }} required />
-            </div>
-            
-            <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-              <label style={{ fontWeight: 500 }}>{isRTL ? 'كلمة المرور' : 'Mot de passe'}</label>
-              <div style={{ position: 'relative' }}>
-                <input type={showLoginPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" style={{ padding: '12px', paddingRight: '40px', borderRadius: '8px', border: '1px solid #e2e8f0', width: '100%' }} required />
-                <button type="button" onClick={() => setShowLoginPassword(!showLoginPassword)} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}>
-                  {showLoginPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-            </div>
-            
-            {loginError && <p style={{ color: '#ef4444', fontSize: '0.9rem', textAlign: 'center' }}>{loginError}</p>}
-            
-            <button type="submit" style={{ padding: '12px', borderRadius: '8px', border: 'none', background: 'var(--primary-color)', color: '#fff', fontWeight: 'bold', cursor: 'pointer', transition: 'background-color 0.2s' }}
-                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1d4ed8'}
-                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'var(--primary-color)'}>
-              {isRTL ? 'دخول' : 'Se connecter'}
-            </button>
-          </form>
-        </div>
-      </div>
-    );
+    return null; // سيتم التوجيه عبر useEffect
   }
 
   return (

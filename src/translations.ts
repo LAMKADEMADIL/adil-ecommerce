@@ -29,7 +29,22 @@ export const translations = {
     footerAbout: "À propos de nous",
     footerPolicy: "Politique de retour",
     footerContact: "Contactez-nous",
-    successMsg: "🎉 Commande reçue avec succès ! Nous vous contacterons bientôt."
+    successMsg: "🎉 Commande reçue avec succès ! Nous vous contacterons bientôt.",
+    login: "Connexion",
+    signup: "Inscription",
+    welcomeBack: "Bon retour !",
+    loginDesc: "Connectez-vous pour suivre vos commandes.",
+    signupDesc: "Inscrivez-vous pour une meilleure expérience.",
+    email: "Email",
+    password: "Mot de passe",
+    confirmPassword: "Confirmer le mot de passe",
+    firstName: "Prénom",
+    lastName: "Nom",
+    backToStore: "Retour au magasin",
+    noAccount: "Pas de compte ?",
+    haveAccount: "Déjà un compte ?",
+    registerNow: "Inscrivez-vous",
+    safeShopping: "Shopping 100% sécurisé"
   },
   ar: {
     heroTitle: "اكتشف تشكيلتنا من الحقائب والمحافظ اليدوية",
@@ -61,7 +76,22 @@ export const translations = {
     footerAbout: "من نحن",
     footerPolicy: "سياسة الإرجاع",
     footerContact: "اتصل بنا",
-    successMsg: "🎉 تم استلام طلبك بنجاح! سنتواصل معك قريباً."
+    successMsg: "🎉 تم استلام طلبك بنجاح! سنتواصل معك قريباً.",
+    login: "تسجيل الدخول",
+    signup: "إنشاء حساب",
+    welcomeBack: "مرحباً بك مجدداً",
+    loginDesc: "قم بتسجيل الدخول لمتابعة طلباتك.",
+    signupDesc: "أنشئ حساباً لتجربة تسوق أفضل.",
+    email: "البريد الإلكتروني",
+    password: "كلمة المرور",
+    confirmPassword: "تأكيد كلمة المرور",
+    firstName: "الاسم",
+    lastName: "النسب",
+    backToStore: "العودة للمتجر",
+    noAccount: "ليس لديك حساب؟",
+    haveAccount: "لديك حساب بالفعل؟",
+    registerNow: "سجل الآن",
+    safeShopping: "تسوق آمن ومشفر 100%"
   },
   en: {
     heroTitle: "Discover our handmade wallets and bags",
@@ -93,7 +123,22 @@ export const translations = {
     footerAbout: "About Us",
     footerPolicy: "Return Policy",
     footerContact: "Contact Us",
-    successMsg: "🎉 Order received successfully! We will contact you soon."
+    successMsg: "🎉 Order received successfully! We will contact you soon.",
+    login: "Login",
+    signup: "Sign Up",
+    welcomeBack: "Welcome Back!",
+    loginDesc: "Login to track your orders.",
+    signupDesc: "Create an account for a better experience.",
+    email: "Email",
+    password: "Password",
+    confirmPassword: "Confirm Password",
+    firstName: "First Name",
+    lastName: "Last Name",
+    backToStore: "Back to Store",
+    noAccount: "No account?",
+    haveAccount: "Already have an account?",
+    registerNow: "Register now",
+    safeShopping: "100% Secure Shopping"
   }
 };
 

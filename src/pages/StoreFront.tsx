@@ -5,9 +5,9 @@ import { translations } from '../translations';
 import type { Language } from '../translations';
 import '../App.css';
 import { db } from '../firebase';
-import { collection, getDocs, addDoc, doc, setDoc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, doc, getDoc } from 'firebase/firestore';
 import { auth } from '../firebase';
-import { onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 import type { User } from 'firebase/auth';
 
 import { getImageUrl } from '../utils';
@@ -26,16 +26,6 @@ export default function StoreFront() {
 
   // Authentication State
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
-  const [userData, setUserData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
-  });
-  const [authError, setAuthError] = useState('');
 
   useEffect(() => {
     if (selectedProduct) {
@@ -114,6 +104,11 @@ export default function StoreFront() {
 
   const t = translations[lang];
   const isRTL = lang === 'ar';
+
+  const handleLangChange = (newLang: Language) => {
+    setLang(newLang);
+    localStorage.setItem('app_lang', newLang);
+  };
 
   const addToCart = (product: any) => {
     const existingItem = cart.find(item => item.id === product.id);
@@ -234,7 +229,7 @@ export default function StoreFront() {
             <div className="lang-switcher">
               <select 
                 value={lang} 
-                onChange={(e) => setLang(e.target.value as Language)}
+                onChange={(e) => handleLangChange(e.target.value as Language)}
                 className="lang-select"
               >
                 <option value="fr">FR</option>
