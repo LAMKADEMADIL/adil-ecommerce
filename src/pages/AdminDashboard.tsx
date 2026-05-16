@@ -371,7 +371,10 @@ export default function AdminDashboard() {
         </button>
 
         <div className="sidebar-footer">
-          <button className="nav-btn logout" onClick={() => setIsAuthenticated(false)} title={isRTL ? 'تسجيل الخروج' : 'Déconnexion'}>
+          <button className="nav-btn logout" onClick={async () => {
+            await auth.signOut();
+            navigate('/login');
+          }} title={isRTL ? 'تسجيل الخروج' : 'Déconnexion'}>
             <LogOut size={20} />
             <span className="nav-text">{isRTL ? 'تسجيل الخروج' : 'Déconnexion'}</span>
           </button>

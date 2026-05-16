@@ -59,7 +59,17 @@ export default function AuthPage() {
       navigate('/'); 
     } catch (err: any) {
       console.error(err);
-      setError(isRTL ? 'حدث خطأ، يرجى التأكد من البيانات' : 'Une erreur est survenue, veuillez vérifier vos informations');
+      if (err.code === 'auth/email-already-in-use') {
+        setError(isRTL ? 'هذا البريد الإلكتروني مستخدم بالفعل' : 'Cet e-mail est déjà utilisé');
+      } else if (err.code === 'auth/invalid-email') {
+        setError(isRTL ? 'البريد الإلكتروني غير صحيح' : 'E-mail invalide');
+      } else if (err.code === 'auth/weak-password') {
+        setError(isRTL ? 'كلمة المرور ضعيفة جداً (يجب أن تكون 6 أحرف على الأقل)' : 'Mot de passe trop faible (min 6 caractères)');
+      } else if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+        setError(isRTL ? 'بيانات الدخول غير صحيحة' : 'Identifiants incorrects');
+      } else {
+        setError(isRTL ? 'حدث خطأ، يرجى التأكد من البيانات' : 'Une erreur est survenue, veuillez vérifier vos informations');
+      }
     } finally {
       setLoading(false);
     }
