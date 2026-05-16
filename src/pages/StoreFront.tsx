@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Bike, Briefcase, Banknote, MessageCircle, Phone, Mail, Search, ShoppingCart, X, Plus, Minus, Trash2, Clock, ShieldCheck, Truck, RotateCcw, Flame, User as UserIcon, LogOut } from 'lucide-react';
 import { translations } from '../translations';
 import type { Language } from '../translations';
@@ -12,6 +13,7 @@ import type { User } from 'firebase/auth';
 import { getImageUrl } from '../utils';
 
 export default function StoreFront() {
+  const navigate = useNavigate();
   const [products, setProducts] = useState<any[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [lang, setLang] = useState<Language>('fr');
@@ -144,43 +146,10 @@ export default function StoreFront() {
     return sum + (price * item.quantity);
   }, 0);
 
-  const handleAuthSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAuthError('');
-    try {
-      if (authMode === 'signup') {
-        if (userData.password !== userData.confirmPassword) {
-          setAuthError(isRTL ? 'كلمات المرور غير متطابقة' : 'Passwords do not match');
-          return;
-        }
-        const userCredential = await createUserWithEmailAndPassword(auth, userData.email, userData.password);
-        await setDoc(doc(db, "customers", userCredential.user.uid), {
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          email: userData.email,
-          createdAt: new Date().toISOString()
-        });
-        setCustomerName(`${userData.firstName} ${userData.lastName}`);
-      } else {
-        const userCredential = await signInWithEmailAndPassword(auth, userData.email, userData.password);
-        const userDoc = await getDoc(doc(db, "customers", userCredential.user.uid));
-        if (userDoc.exists()) {
-          const data = userDoc.data();
-          setCustomerName(`${data.firstName} ${data.lastName}`);
-        }
-      }
-      setIsAuthModalOpen(false);
-      setUserData({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '' });
-    } catch (error: any) {
-      console.error("Auth error: ", error);
-      setAuthError(isRTL ? 'خطأ في الدخول. يرجى التأكد من البيانات.' : 'Error. Please check your credentials.');
-    }
-  };
-
   const handleOrderSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentUser) {
-      setIsAuthModalOpen(true);
+      navigate('/login');
       return;
     }
     try {
@@ -256,7 +225,7 @@ export default function StoreFront() {
                   </button>
                 </div>
               ) : (
-                <button className="login-trigger-btn" onClick={() => setIsAuthModalOpen(true)}>
+                <button className="login-trigger-btn" onClick={() => navigate('/login')}>
                   <UserIcon size={24} />
                 </button>
               )}
@@ -486,63 +455,6 @@ export default function StoreFront() {
                 </div>
               </div>
             )}
-          </div>
-        </div>
-      )}
-      {/* Auth Modal (Login/Signup) */}
-      {isAuthModalOpen && (
-        <div className="sidebar-overlay" style={{zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center'}} onClick={() => setIsAuthModalOpen(false)}>
-          <div className="modal-content auth-modal" style={{maxWidth: '400px', width: '90%'}} onClick={e => e.stopPropagation()}>
-            <div className="auth-header" style={{display: 'flex', justifyContent: 'space-between', marginBottom: '20px'}}>
-              <h3>{authMode === 'login' ? (isRTL ? 'تسجيل الدخول' : 'Connexion') : (isRTL ? 'إنشاء حساب جديد' : 'Créer un compte')}</h3>
-              <button onClick={() => setIsAuthModalOpen(false)} style={{background: 'none', border: 'none', cursor: 'pointer'}}><X size={24} /></button>
-            </div>
-            
-            <form onSubmit={handleAuthSubmit} style={{display: 'flex', flexDirection: 'column', gap: '15px'}}>
-              {authMode === 'signup' && (
-                <>
-                  <div className="form-group" style={{display: 'flex', gap: '10px'}}>
-                    <input type="text" placeholder={isRTL ? 'الاسم' : 'Prénom'} value={userData.firstName} onChange={e => setUserData({...userData, firstName: e.target.value})} required style={{flex: 1}} />
-                    <input type="text" placeholder={isRTL ? 'النسب' : 'Nom'} value={userData.lastName} onChange={e => setUserData({...userData, lastName: e.target.value})} required style={{flex: 1}} />
-                  </div>
-                </>
-              )}
-              <div className="form-group">
-                <input type="email" placeholder={isRTL ? 'البريد الإلكتروني' : 'Email'} value={userData.email} onChange={e => setUserData({...userData, email: e.target.value})} required />
-              </div>
-              <div className="form-group">
-                <input type="password" placeholder={isRTL ? 'كلمة المرور' : 'Mot de passe'} value={userData.password} onChange={e => setUserData({...userData, password: e.target.value})} required />
-              </div>
-              {authMode === 'signup' && (
-                <div className="form-group">
-                  <input type="password" placeholder={isRTL ? 'تأكيد كلمة المرور' : 'Confirmer'} value={userData.confirmPassword} onChange={e => setUserData({...userData, confirmPassword: e.target.value})} required />
-                </div>
-              )}
-              
-              {authError && <p style={{color: '#ef4444', fontSize: '0.85rem'}}>{authError}</p>}
-              
-              <button type="submit" className="btn-primary" style={{backgroundColor: 'var(--primary-color)', color: 'white', padding: '12px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold'}}>
-                {authMode === 'login' ? (isRTL ? 'دخول' : 'Se connecter') : (isRTL ? 'إنشاء الحساب' : 'S\'inscrire')}
-              </button>
-            </form>
-            
-            <div style={{marginTop: '20px', textAlign: 'center', fontSize: '0.9rem'}}>
-              {authMode === 'login' ? (
-                <p>
-                  {isRTL ? 'ليس لديك حساب؟' : 'Pas de compte ?'}{' '}
-                  <button onClick={() => setAuthMode('signup')} style={{color: 'var(--primary-color)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'bold'}}>
-                    {isRTL ? 'سجل الآن' : 'Inscrivez-vous'}
-                  </button>
-                </p>
-              ) : (
-                <p>
-                  {isRTL ? 'لديك حساب بالفعل؟' : 'Déjà un compte ?'}{' '}
-                  <button onClick={() => setAuthMode('login')} style={{color: 'var(--primary-color)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'bold'}}>
-                    {isRTL ? 'سجل دخولك' : 'Connectez-vous'}
-                  </button>
-                </p>
-              )}
-            </div>
           </div>
         </div>
       )}
